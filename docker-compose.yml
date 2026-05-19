@@ -111,7 +111,7 @@ services:
     networks:
       - scrappy-net
     shm_size: "2gb"
-    command: ["python", "-m", "rq", "worker", "scrappy"]
+    command: ["rq", "worker", "scrappy"]
 
   # ── Nginx (TLS termination + rate limiting) ───────────────────────────────
   nginx:

@@ -3,7 +3,7 @@ import time
 import httpx
 
 # Set this to your live domain (e.g., https://api.scrappie.tech) if testing in production
-BASE_URL = os.getenv("API_URL", "http://localhost:8000")
+BASE_URL = os.getenv("API_URL", "https://scrappie.tech")
 TARGET_URL = "https://gopanda.in"
 
 def run_tests():
