@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Scrappy — Stealth Web Scraping API</title>
+<title>Scrappy — Stealth Scraping API + Hosted Browser</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
   :root {
     --bg:       #080a0f;
@@ -25,9 +25,11 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Syne', sans-serif;
+    font-family: 'Sora', sans-serif;
     line-height: 1.6;
     overflow-x: hidden;
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* ── Grid noise overlay ── */
@@ -179,9 +181,10 @@
     font-size: clamp(3rem, 8vw, 7rem);
     font-weight: 800;
     line-height: 1;
-    letter-spacing: -3px;
+    letter-spacing: -1.5px;
     margin-bottom: 1.5rem;
     animation: fadeDown .7s ease .1s both;
+    font-family: 'Syne', sans-serif;
   }
 
   h1 em {
@@ -315,9 +318,10 @@
   h2 {
     font-size: clamp(2rem, 4vw, 3.5rem);
     font-weight: 800;
-    letter-spacing: -2px;
+    letter-spacing: -1px;
     line-height: 1.1;
     margin-bottom: 1rem;
+    font-family: 'Syne', sans-serif;
   }
 
   h2 em { font-style: normal; color: var(--accent); }
@@ -379,6 +383,206 @@
     font-size: .9rem;
     color: var(--muted);
     line-height: 1.7;
+  }
+
+  /* ── Products ── */
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+  }
+
+  .product-card {
+    background: linear-gradient(135deg, rgba(0,255,136,.05), rgba(14,17,23,.9));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .product-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: .75rem;
+  }
+
+  .product-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin-bottom: .6rem;
+  }
+
+  .product-desc {
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+    font-size: .95rem;
+  }
+
+  .product-list {
+    list-style: none;
+    font-size: .85rem;
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+  }
+
+  .product-list li::before {
+    content: '→ ';
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ── Value props ── */
+  .value-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .value-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.75rem;
+    background: rgba(14,17,23,.8);
+  }
+
+  .value-title {
+    font-weight: 700;
+    margin-bottom: .5rem;
+  }
+
+  .value-desc {
+    color: var(--muted);
+    font-size: .9rem;
+  }
+
+  /* ── Auth section ── */
+  .auth-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+  }
+
+  .auth-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 1.5rem;
+  }
+
+  .auth-card h3 {
+    font-size: 1rem;
+    margin-bottom: .75rem;
+  }
+
+  .auth-code {
+    font-family: 'Space Mono', monospace;
+    font-size: .75rem;
+    background: #0b0f15;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    white-space: pre-wrap;
+  }
+
+  .auth-note {
+    color: var(--muted);
+    font-size: .8rem;
+    margin-top: .75rem;
+  }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(8, 10, 15, 0.8);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 2rem;
+  }
+
+  .modal-overlay.is-open {
+    display: flex;
+  }
+
+  .modal {
+    width: min(420px, 100%);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  .modal-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .modal-close {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+
+  .modal-label {
+    font-size: .75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: .5rem;
+  }
+
+  .modal-plan {
+    font-family: 'Space Mono', monospace;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+
+  .modal-input {
+    width: 100%;
+    padding: .8rem 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #0b0f15;
+    color: var(--text);
+    font-size: .9rem;
+    margin-bottom: 1rem;
+  }
+
+  .modal-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: .75rem;
+  }
+
+  .modal-message {
+    margin-top: .75rem;
+    font-size: .8rem;
+    color: var(--muted);
   }
 
   /* ── Test results table ── */
@@ -546,11 +750,11 @@
 <nav>
   <a href="#" class="logo">Scr<span>appy</span></a>
   <ul class="nav-links">
+    <li><a href="#products">Products</a></li>
     <li><a href="#features">Features</a></li>
-    <li><a href="#tests">Proof</a></li>
     <li><a href="#pricing">Pricing</a></li>
     <li><a href="/docs">Docs</a></li>
-    <li><a href="#pricing" class="btn btn-primary">Get API Key</a></li>
+    <li><a href="#auth" class="btn btn-primary">Get API key</a></li>
   </ul>
 </nav>
 
@@ -559,12 +763,12 @@
   <div class="hero-glow"></div>
   <div class="badge">
     <span class="dot"></span>
-    14/14 bot detection tests passed · Powered by CloakBrowser + Hysteria2
+    Scraping API + Hosted Browser · Powered by CloakBrowser + Hysteria2
   </div>
-  <h1>Scrape <em>anything.</em><br/>Get blocked by <em>nothing.</em></h1>
+  <h1>Scrape, render, and<br/><em>act like a human.</em></h1>
   <p class="hero-sub">
-    Stealth web scraping API that bypasses Cloudflare, reCAPTCHA, FingerprintJS
-    and every bot detection system — in one API call.
+    Two products in one stack: a stealth scraping API and a hosted browser
+    endpoint with real JS steps. You send a URL, we return the page.
   </p>
   <div class="hero-actions">
     <a href="#pricing" class="btn btn-primary">Start for free →</a>
@@ -580,14 +784,18 @@
     </div>
     <pre><span class="kw">import</span> requests
 
-response = requests.<span class="fn">post</span>(<span class="str">"https://api.scrappy.io/v1/scrape"</span>, {
-    <span class="str">"url"</span>: <span class="str">"https://cloudflare-protected-site.com"</span>,
-    <span class="str">"extract_json"</span>: <span class="kw">True</span>,
-    <span class="str">"screenshot"</span>: <span class="kw">False</span>,
-}, headers={<span class="str">"x-api-key"</span>: <span class="str">"sk_your_key_here"</span>})
+  response = requests.<span class="fn">post</span>(<span class="str">"https://api.scrappie.tech/v1/browser"</span>, {
+    <span class="str">"url"</span>: <span class="str">"https://gopanda.in"</span>,
+    <span class="str">"steps"</span>: [
+      {<span class="str">"action"</span>: <span class="str">"wait_for"</span>, <span class="str">"selector"</span>: <span class="str">".menu"</span>},
+      {<span class="str">"action"</span>: <span class="str">"scroll"</span>, <span class="str">"y"</span>: <span class="num">800</span>},
+      {<span class="str">"action"</span>: <span class="str">"click"</span>, <span class="str">"selector"</span>: <span class="str">".menu a"</span>}
+    ],
+    <span class="str">"screenshot"</span>: <span class="kw">True</span>
+  }, headers={<span class="str">"x-api-key"</span>: <span class="str">"sk_your_key_here"</span>})
 
-data = response.<span class="fn">json</span>()
-<span class="cm"># ✓ html, title, structured_data, meta — no block, no CAPTCHA</span></pre>
+  data = response.<span class="fn">json</span>()
+  <span class="cm"># ✓ html + screenshot_base64 + final url</span></pre>
   </div>
 </div>
 
@@ -610,6 +818,38 @@ data = response.<span class="fn">json</span>()
     <span class="stat-label">Avg Response Time</span>
   </div>
 </div>
+
+<!-- Products -->
+<section id="products">
+  <p class="section-label">// Products</p>
+  <h2>Two products.<br/><em>One stack.</em></h2>
+  <p class="section-desc">
+    Scrappy gives you a stealth scraping API and a hosted browser endpoint in
+    one place. Same infrastructure, same auth, different workflows.
+  </p>
+  <div class="product-grid">
+    <div class="product-card">
+      <div class="product-tag">Scraping API</div>
+      <div class="product-title">Clean HTML + JSON in one call</div>
+      <p class="product-desc">Send a URL, get HTML, title, and structured data. No Playwright setup, no proxy wrangling.</p>
+      <ul class="product-list">
+        <li>/v1/scrape, /v1/render, /v1/batch</li>
+        <li>Optional JSON-LD + meta extraction</li>
+        <li>Screenshots on demand</li>
+      </ul>
+    </div>
+    <div class="product-card">
+      <div class="product-tag">Hosted Browser</div>
+      <div class="product-title">Run JS steps like a real user</div>
+      <p class="product-desc">Provide clicks, fills, and waits. Scrappy runs a stealth browser and returns the final page.</p>
+      <ul class="product-list">
+        <li>/v1/browser sync or async</li>
+        <li>Steps: click, fill, type, scroll, wait</li>
+        <li>Ideal for logins and dynamic UIs</li>
+      </ul>
+    </div>
+  </div>
+</section>
 
 <!-- Features -->
 <section id="features">
@@ -649,6 +889,27 @@ data = response.<span class="fn">json</span>()
       <div class="feature-icon">🛡️</div>
       <div class="feature-title">Passes Cloudflare Turnstile</div>
       <p class="feature-desc">Both non-interactive and managed Turnstile challenges. Also passes ShieldSquare, FingerprintJS, BrowserScan, and bot.incolumitas.com.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Value -->
+<section id="value">
+  <p class="section-label">// Why teams subscribe</p>
+  <h2>Reliability you can<br/><em>build a business on.</em></h2>
+  <p class="section-desc">You pay for uptime, stealth, and scale. We handle the infrastructure, you ship features.</p>
+  <div class="value-grid">
+    <div class="value-card">
+      <div class="value-title">Higher success rates</div>
+      <p class="value-desc">CloakBrowser defeats browser fingerprinting while Hysteria2 masks network-level signals. Blocks drop, retries succeed.</p>
+    </div>
+    <div class="value-card">
+      <div class="value-title">No infra to manage</div>
+      <p class="value-desc">We run the browser fleet, proxy layer, and job queue. You just send URLs and steps.</p>
+    </div>
+    <div class="value-card">
+      <div class="value-title">Predictable scaling</div>
+      <p class="value-desc">Async jobs, rate limiting, and usage caps keep costs controlled while you grow volume.</p>
     </div>
   </div>
 </section>
@@ -698,10 +959,10 @@ data = response.<span class="fn">json</span>()
       <ul class="price-features">
         <li>/scrape + /render endpoints</li>
         <li>HTML + structured data</li>
-        <li>Screenshot support</li>
+        <li>Limited async queue</li>
         <li>Community support</li>
       </ul>
-      <a href="/v1/keys/create" class="btn btn-outline" style="width:100%;justify-content:center;">Get free key</a>
+      <a href="#auth" class="btn btn-outline" style="width:100%;justify-content:center;">Get free key</a>
     </div>
 
     <div class="price-card">
@@ -710,11 +971,12 @@ data = response.<span class="fn">json</span>()
       <p class="price-requests">10,000 requests / month</p>
       <ul class="price-features">
         <li>Everything in Free</li>
+        <li>Hosted browser steps</li>
         <li>Batch endpoint (10 URLs)</li>
         <li>US proxy credentials</li>
         <li>Email support</li>
       </ul>
-      <a href="#" class="btn btn-outline" style="width:100%;justify-content:center;">Start now</a>
+      <button class="btn btn-outline js-upgrade" data-plan="starter" style="width:100%;justify-content:center;">Upgrade</button>
     </div>
 
     <div class="price-card featured">
@@ -725,10 +987,10 @@ data = response.<span class="fn">json</span>()
       <ul class="price-features">
         <li>Everything in Starter</li>
         <li>US + EU proxy regions</li>
-        <li>Priority queue</li>
+        <li>Priority async queue</li>
         <li>Priority support</li>
       </ul>
-      <a href="#" class="btn btn-primary" style="width:100%;justify-content:center;">Start now</a>
+      <button class="btn btn-primary js-upgrade" data-plan="growth" style="width:100%;justify-content:center;">Upgrade</button>
     </div>
 
     <div class="price-card">
@@ -738,10 +1000,33 @@ data = response.<span class="fn">json</span>()
       <ul class="price-features">
         <li>Everything in Growth</li>
         <li>All 3 proxy regions</li>
-        <li>Dedicated queue</li>
+        <li>Dedicated queue + higher concurrency</li>
         <li>SLA + Slack support</li>
       </ul>
-      <a href="#" class="btn btn-outline" style="width:100%;justify-content:center;">Start now</a>
+      <button class="btn btn-outline js-upgrade" data-plan="scale" style="width:100%;justify-content:center;">Upgrade</button>
+    </div>
+  </div>
+</section>
+
+<!-- Auth -->
+<section id="auth">
+  <p class="section-label">// Keys + Billing</p>
+  <h2>Get a key instantly.<br/><em>Upgrade with Stripe.</em></h2>
+  <p class="section-desc">No accounts required. Create a key by email, then upgrade in one click.</p>
+  <div class="auth-grid">
+    <div class="auth-card">
+      <h3>Create API key (free)</h3>
+      <pre class="auth-code">curl -X POST https://scrappie.tech/v1/keys/create \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@email.com","plan":"free"}'</pre>
+      <p class="auth-note">Response includes your API key.</p>
+    </div>
+    <div class="auth-card">
+      <h3>Upgrade plan (Stripe checkout)</h3>
+      <pre class="auth-code">curl -X POST https://scrappie.tech/v1/billing/checkout \
+  -H "Content-Type: application/json" \
+  -d '{"email":"you@email.com","plan":"growth"}'</pre>
+      <p class="auth-note">Checkout URL is returned in the response.</p>
     </div>
   </div>
 </section>
@@ -750,14 +1035,113 @@ data = response.<span class="fn">json</span>()
 <div class="cta-section">
   <p class="section-label" style="text-align:center;">// Get started in 60 seconds</p>
   <h2 style="max-width:600px;margin:0 auto 1rem;">Stop fighting bot detection.<br/><em>Start scraping.</em></h2>
-  <p style="color:var(--muted);margin-bottom:2.5rem;">No setup. No Playwright config. No proxy hunting. Just an API key and a URL.</p>
-  <a href="#pricing" class="btn btn-primary" style="font-size:1rem;padding:.9rem 2.5rem;">Get your free API key →</a>
+  <p style="color:var(--muted);margin-bottom:2.5rem;">No setup. No Playwright config. No proxy hunting. Create a key by email.</p>
+  <a href="#auth" class="btn btn-primary" style="font-size:1rem;padding:.9rem 2.5rem;">Get your API key →</a>
+</div>
+
+<!-- Checkout Modal -->
+<div class="modal-overlay" id="checkoutModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Upgrade plan</div>
+      <button class="modal-close" type="button" id="checkoutClose" aria-label="Close">×</button>
+    </div>
+    <div class="modal-label">Selected plan</div>
+    <div class="modal-plan" id="checkoutPlan">growth</div>
+    <form id="checkoutForm">
+      <input class="modal-input" type="email" id="checkoutEmail" placeholder="Email for checkout" required />
+      <div class="modal-actions">
+        <button class="btn btn-primary" type="submit" id="checkoutSubmit">Continue to payment</button>
+        <button class="btn btn-outline" type="button" id="checkoutCancel">Cancel</button>
+      </div>
+      <div class="modal-message" id="checkoutMessage"></div>
+    </form>
+  </div>
 </div>
 
 <!-- Footer -->
 <footer>
   <p>© 2026 Scrappy · Built on <a href="https://github.com/CloakHQ/CloakBrowser" style="color:var(--accent);text-decoration:none;">CloakBrowser</a> + <a href="https://v2.hysteria.network" style="color:var(--accent);text-decoration:none;">Hysteria2</a> · MIT Licensed engines</p>
 </footer>
+
+<script>
+  const modal = document.getElementById('checkoutModal');
+  const planLabel = document.getElementById('checkoutPlan');
+  const emailInput = document.getElementById('checkoutEmail');
+  const submitButton = document.getElementById('checkoutSubmit');
+  const message = document.getElementById('checkoutMessage');
+  const form = document.getElementById('checkoutForm');
+  let selectedPlan = null;
+
+  function requestCheckout(plan, email) {
+    return fetch('/v1/billing/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, plan: plan })
+    }).then((response) => response.json());
+  }
+
+  function openModal(plan) {
+    selectedPlan = plan;
+    planLabel.textContent = plan;
+    emailInput.value = '';
+    message.textContent = '';
+    modal.classList.add('is-open');
+    modal.setAttribute('aria-hidden', 'false');
+    emailInput.focus();
+  }
+
+  function closeModal() {
+    modal.classList.remove('is-open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  document.getElementById('checkoutClose').addEventListener('click', closeModal);
+  document.getElementById('checkoutCancel').addEventListener('click', closeModal);
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) {
+      closeModal();
+    }
+  });
+
+  document.querySelectorAll('.js-upgrade').forEach((button) => {
+    button.addEventListener('click', () => {
+      const plan = button.getAttribute('data-plan');
+      openModal(plan);
+    });
+  });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const email = emailInput.value.trim();
+    if (!email) {
+      emailInput.focus();
+      return;
+    }
+    if (!selectedPlan) {
+      message.textContent = 'Select a plan first.';
+      return;
+    }
+
+    submitButton.disabled = true;
+    submitButton.textContent = 'Creating checkout...';
+    message.textContent = '';
+
+    try {
+      const result = await requestCheckout(selectedPlan, email);
+      if (result.checkout_url) {
+        window.location.href = result.checkout_url;
+        return;
+      }
+      message.textContent = result.detail || 'Checkout failed. Please try again.';
+    } catch (error) {
+      message.textContent = 'Checkout failed. Please try again.';
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Continue to payment';
+    }
+  });
+</script>
 
 </body>
 </html>

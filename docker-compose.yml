@@ -12,6 +12,8 @@ services:
       dockerfile: Dockerfile
     container_name: scrappy-api
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     environment:
@@ -82,6 +84,8 @@ services:
       dockerfile: Dockerfile
     container_name: scrappy-worker
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       - REDIS_URL=redis://redis:6379
       - HYSTERIA_PROXY=socks5://hysteria-client:1080
