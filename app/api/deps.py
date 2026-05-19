@@ -11,6 +11,14 @@ async def verify_api_key(x_api_key: str = Header(...)):
     key_data = await redis.hgetall(f"apikey:{x_api_key}")
     if not key_data:
         raise HTTPException(status_code=401, detail="Invalid API key")
+        
+    # Safely decode bytes to strings (Redis returns bytes by default)
+    key_data = {
+        (k.decode("utf-8") if isinstance(k, bytes) else k):
+        (v.decode("utf-8") if isinstance(v, bytes) else v)
+        for k, v in key_data.items()
+    }
+
     plan = key_data.get("plan", "free")
     limit = PLANS[plan]["requests"]
     month = datetime.utcnow().strftime("%Y-%m")

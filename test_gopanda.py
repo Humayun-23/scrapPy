@@ -19,7 +19,7 @@ def run_tests():
     
     # 2. Create API Key
     print("\n2️⃣  Testing POST /v1/keys/create...")
-    res = client.post("/v1/keys/create", json={"email": "test@gopanda.in", "plan": "free"})
+    res = client.post("/v1/keys/create", json={"email": "humayunroshid2@gmail.com", "plan": "free"})
     print(f"Status: {res.status_code}")
     
     api_key = res.json().get("api_key")

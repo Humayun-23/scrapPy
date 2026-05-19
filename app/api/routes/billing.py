@@ -26,6 +26,13 @@ async def billing_checkout(req: CheckoutRequest):
     if not key_data:
         raise HTTPException(status_code=404, detail="Invalid API key. Please generate a free key first.")
     
+    # Safely decode bytes to strings (Redis returns bytes by default)
+    key_data = {
+        (k.decode("utf-8") if isinstance(k, bytes) else k):
+        (v.decode("utf-8") if isinstance(v, bytes) else v)
+        for k, v in key_data.items()
+    }
+
     email = key_data.get("email")
 
     checkout_url = get_gumroad_url(plan, email)
