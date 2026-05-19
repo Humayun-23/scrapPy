@@ -6,8 +6,8 @@ listen: :443
 
 # TLS — use your domain cert (certbot / acme.sh)
 tls:
-  cert: /etc/letsencrypt/live/us1.scrappy.io/fullchain.pem
-  key:  /etc/letsencrypt/live/us1.scrappy.io/privkey.pem
+  cert: /etc/letsencrypt/live/scrappie.tech/fullchain.pem
+  key:  /etc/letsencrypt/live/scrappie.tech/privkey.pem
 
 # Masquerade as a real HTTPS site — makes traffic look like HTTP/3
 masquerade:
@@ -25,10 +25,8 @@ quic:
 
 # Auth backend — calls your FastAPI /internal/proxy-auth
 auth:
-  type: http
-  http:
-    url: http://127.0.0.1:8000/internal/proxy-auth
-    insecure: false
+  type: password
+  password: scrappy-internal-client-secret
 
 # Outbound — route through your server's clean IP
 outbound:

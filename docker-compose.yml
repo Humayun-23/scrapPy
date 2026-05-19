@@ -57,6 +57,24 @@ services:
       - scrappy-net
     command: ["-c", "/etc/hysteria/config.yaml", "client"]
 
+  # ── Hysteria2 Server (QUIC/HTTP3 ingress) ─────────────────────────────────
+  hysteria-server:
+    build:
+      context: ./hysteria
+      dockerfile: Dockerfile
+    container_name: scrappy-hysteria-server
+    restart: unless-stopped
+    volumes:
+      - ./hysteria/hysteria-server.yaml:/etc/hysteria/config.yaml:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    ports:
+      - "443:443/udp"
+    depends_on:
+      - api
+    networks:
+      - scrappy-net
+    command: ["-c", "/etc/hysteria/config.yaml", "server"]
+
   # ── Worker (RQ job processor) ─────────────────────────────────────────────
   worker:
     build:
