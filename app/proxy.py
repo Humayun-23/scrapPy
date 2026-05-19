@@ -24,7 +24,9 @@ NODES = {
     },
 }
 
-PROXY_SECRET = os.getenv("PROXY_SECRET", "change-this-secret-in-production")
+PROXY_SECRET = os.getenv("PROXY_SECRET")
+if not PROXY_SECRET:
+    raise ValueError("CRITICAL SECURITY RISK: PROXY_SECRET environment variable is missing and must be set in production.")
 
 
 def get_proxy_credentials(region: str, api_key: str) -> dict:

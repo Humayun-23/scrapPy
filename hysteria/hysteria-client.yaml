@@ -4,8 +4,8 @@
 
 server: scrappie.tech:443   # your Hysteria2 server node
 
-# Auth credentials (match what your server expects)
-auth: scrappy-internal-client-secret
+# Auth credentials (injected at runtime)
+auth: ${HYSTERIA_CLIENT_SECRET}
 
 # TLS — verify your server cert
 tls:

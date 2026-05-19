@@ -26,7 +26,7 @@ quic:
 # Auth backend — calls your FastAPI /internal/proxy-auth
 auth:
   type: password
-  password: scrappy-internal-client-secret
+  password: ${HYSTERIA_CLIENT_SECRET}
 
 # Outbound — route through your server's clean IP
 outbound:

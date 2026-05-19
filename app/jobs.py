@@ -56,6 +56,7 @@ async def _run_scrape(payload: dict[str, Any]) -> dict[str, Any]:
         wait_for=payload.get("wait_for"),
         extract_json=payload.get("extract_json", False),
         screenshot=payload.get("screenshot", False),
+        extract_markdown=payload.get("extract_markdown", False),
         timeout=payload.get("timeout", 30),
     )
     return {"success": True, **result}
@@ -77,6 +78,7 @@ async def _run_browser(payload: dict[str, Any]) -> dict[str, Any]:
         wait_for=payload.get("wait_for"),
         extract_json=payload.get("extract_json", False),
         screenshot=payload.get("screenshot", False),
+        extract_markdown=payload.get("extract_markdown", False),
         timeout=payload.get("timeout", 30),
     )
     return {"success": True, **result}

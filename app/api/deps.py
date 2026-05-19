@@ -15,12 +15,15 @@ async def verify_api_key(x_api_key: str = Header(...)):
     limit = PLANS[plan]["requests"]
     month = datetime.utcnow().strftime("%Y-%m")
     usage_key = f"usage:{x_api_key}:{month}"
-    usage = int(await redis.get(usage_key) or 0)
-    if usage >= limit:
+
+    # Use INCR first to avoid race conditions on concurrent requests
+    usage = await redis.incr(usage_key)
+    if usage == 1:
+        await redis.expire(usage_key, 60 * 60 * 24 * 32)
+
+    if usage > limit:
         raise HTTPException(
             status_code=429,
             detail=f"Monthly limit of {limit} requests reached. Upgrade your plan.",
         )
-    await redis.incr(usage_key)
-    await redis.expire(usage_key, 60 * 60 * 24 * 32)
-    return {"api_key": x_api_key, "plan": plan, "usage": usage + 1, "limit": limit}
+    return {"api_key": x_api_key, "plan": plan, "usage": usage, "limit": limit}

@@ -21,6 +21,8 @@ services:
       - HYSTERIA_PROXY=socks5://hysteria-client:1080
       - MAX_CONCURRENT_BROWSERS=5
       - PROXY_SECRET=${PROXY_SECRET}
+      # Optional: Add a comma-separated list of proxies for rotation
+      - PROXY_POOL=${PROXY_POOL:-}
       # Hysteria2 node hostnames
       - HYSTERIA_US_HOST=${HYSTERIA_US_HOST}
       - HYSTERIA_EU_HOST=${HYSTERIA_EU_HOST}
@@ -51,13 +53,16 @@ services:
       dockerfile: Dockerfile
     container_name: scrappy-hysteria-client
     restart: unless-stopped
+    environment:
+      - HYSTERIA_CLIENT_SECRET=${HYSTERIA_CLIENT_SECRET}
     volumes:
       - ./hysteria/hysteria-client.yaml:/etc/hysteria/config.yaml:ro
     ports:
       - "1080:1080"
     networks:
       - scrappy-net
-    command: ["-c", "/etc/hysteria/config.yaml", "client"]
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["envsubst < /etc/hysteria/config.yaml > /tmp/config.yaml && hysteria -c /tmp/config.yaml client"]
 
   # ── Hysteria2 Server (QUIC/HTTP3 ingress) ─────────────────────────────────
   hysteria-server:
@@ -66,6 +71,8 @@ services:
       dockerfile: Dockerfile
     container_name: scrappy-hysteria-server
     restart: unless-stopped
+    environment:
+      - HYSTERIA_CLIENT_SECRET=${HYSTERIA_CLIENT_SECRET}
     volumes:
       - ./hysteria/hysteria-server.yaml:/etc/hysteria/config.yaml:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
@@ -75,7 +82,8 @@ services:
       - api
     networks:
       - scrappy-net
-    command: ["-c", "/etc/hysteria/config.yaml", "server"]
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["envsubst < /etc/hysteria/config.yaml > /tmp/config.yaml && hysteria -c /tmp/config.yaml server"]
 
   # ── Worker (RQ job processor) ─────────────────────────────────────────────
   worker:
@@ -91,6 +99,8 @@ services:
       - HYSTERIA_PROXY=socks5://hysteria-client:1080
       - MAX_CONCURRENT_BROWSERS=5
       - JOB_QUEUE_NAME=scrappy
+      # Optional: Add a comma-separated list of proxies for rotation
+      - PROXY_POOL=${PROXY_POOL:-}
     depends_on:
       - redis
       - hysteria-client

@@ -1,7 +1,7 @@
 FROM alpine:latest
 
 # Install curl and ca-certificates for downloading binaries
-RUN apk add --no-cache curl ca-certificates bash
+RUN apk add --no-cache curl ca-certificates bash gettext
 
 # Download the latest Hysteria2 binary from GitHub releases
 RUN mkdir -p /usr/local/bin && \

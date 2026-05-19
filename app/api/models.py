@@ -8,6 +8,7 @@ class ScrapeRequest(BaseModel):
     wait_for: Optional[str] = None
     extract_json: Optional[bool] = False
     screenshot: Optional[bool] = False
+    extract_markdown: Optional[bool] = False
     timeout: Optional[int] = 30
 
 
@@ -29,6 +30,7 @@ class BrowserRequest(BaseModel):
     wait_for: Optional[str] = None
     extract_json: Optional[bool] = False
     screenshot: Optional[bool] = False
+    extract_markdown: Optional[bool] = False
     timeout: Optional[int] = 30
 
 
