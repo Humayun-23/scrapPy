@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Scrappy | Stealth Web Scraping & Browser Automation API for AI</title>
-<meta name="description" content="Scrappy is the ultimate stealth web scraping and browser automation API. Bypass Cloudflare, render JavaScript, automate interactions, and extract clean JSON or Markdown for AI."/>
+<title>Scrappie | Stealth Web Scraping & Browser Automation API for AI</title>
+<meta name="description" content="Scrappie is the ultimate stealth web scraping and browser automation API. Bypass Cloudflare, render JavaScript, automate interactions, and extract clean JSON or Markdown for AI."/>
 <meta name="keywords" content="web scraping API, bypass cloudflare, stealth proxy, headless browser, LLM markdown, data extraction, AI web scraper, Playwright API"/>
-<meta property="og:title" content="Scrappy — Stealth Scraping API + Hosted Browser"/>
+<meta property="og:title" content="Scrappie — Stealth Scraping API + Hosted Browser"/>
 <meta property="og:description" content="Bypass WAFs and bot detection. Extract clean HTML, JSON, and Markdown from any website with our stealth headless browser API."/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://scrappie.tech/"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="Scrappy — Stealth Scraping API"/>
+<meta name="twitter:title" content="Scrappie — Stealth Scraping API"/>
 <meta name="twitter:description" content="Bypass WAFs and bot detection. Extract clean HTML, JSON, and Markdown from any website."/>
 <link rel="canonical" href="https://scrappie.tech/"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -830,7 +830,7 @@
 
 <!-- Nav -->
 <nav>
-  <a href="#" class="logo">Scr<span>appy</span></a>
+  <a href="#" class="logo">Scrapp<span>ie</span></a>
   <ul class="nav-links">
     <li><a href="#products">Products</a></li>
     <li><a href="#features">Features</a></li>
@@ -912,7 +912,7 @@
   <p class="section-label">// Products</p>
   <h2>Two products.<br/><em>One stack.</em></h2>
   <p class="section-desc">
-    Scrappy gives you a stealth scraping API and a hosted browser endpoint in
+    Scrappie gives you a stealth scraping API and a hosted browser endpoint in
     one place. Same infrastructure, same auth, different workflows.
   </p>
   <div class="product-grid">
@@ -929,7 +929,7 @@
     <div class="product-card">
       <div class="product-tag">Hosted Browser</div>
       <div class="product-title">Run JS steps like a real user</div>
-      <p class="product-desc">Provide clicks, fills, and waits. Scrappy runs a stealth browser and returns the final page.</p>
+      <p class="product-desc">Provide clicks, fills, and waits. Scrappie runs a stealth browser and returns the final page.</p>
       <ul class="product-list">
         <li>/v1/browser sync or async</li>
         <li>Steps: click, fill, type, scroll, wait</li>
@@ -941,10 +941,10 @@
 
 <!-- Features -->
 <section id="features">
-  <p class="section-label">// Why Scrappy</p>
+  <p class="section-label">// Why Scrappie</p>
   <h2>Two layers of stealth.<br/><em>Zero compromises.</em></h2>
   <p class="section-desc">
-    Most scrapers only solve one problem. Scrappy stacks CloakBrowser and Hysteria2
+    Most scrapers only solve one problem. Scrappie stacks CloakBrowser and Hysteria2
     to defeat detection at both the browser and network level simultaneously.
   </p>
   <div class="features-grid">
@@ -1013,7 +1013,7 @@
         <tr>
           <th>Detection Service</th>
           <th>Stock Playwright</th>
-          <th>Scrappy</th>
+          <th>Scrappie</th>
           <th>Notes</th>
         </tr>
       </thead>
@@ -1155,7 +1155,7 @@
       <div class="modal-title" id="tosTitle" style="color: var(--danger);">⚠️ Legal Agreement Required</div>
     </div>
     <div class="tos-text">
-      <p style="margin-bottom: 0.75rem;">By accessing or using Scrappy, you agree to our strict <a href="/tos.html" style="color: var(--accent);">Terms of Service & Acceptable Use Policy (AUP)</a>.</p>
+      <p style="margin-bottom: 0.75rem;">By accessing or using Scrappie, you agree to our strict <a href="/tos.html" style="color: var(--accent);">Terms of Service & Acceptable Use Policy (AUP)</a>.</p>
       <p style="margin-bottom: 0.75rem;"><strong>You explicitly agree NOT to use this service for:</strong></p>
       <ul style="margin-left: 1.5rem; margin-bottom: 1rem; color: var(--text);">
         <li>Bypassing authentication walls (Logins)</li>
@@ -1172,7 +1172,7 @@
 
 <!-- Footer -->
 <footer>
-  <p>© 2026 Scrappy · Built on <a href="https://github.com/CloakHQ/CloakBrowser" style="color:var(--accent);text-decoration:none;">CloakBrowser</a> + <a href="https://v2.hysteria.network" style="color:var(--accent);text-decoration:none;">Hysteria2</a> · MIT Licensed engines</p>
+  <p>© 2026 Scrappie · Built on <a href="https://github.com/CloakHQ/CloakBrowser" style="color:var(--accent);text-decoration:none;">CloakBrowser</a> + <a href="https://v2.hysteria.network" style="color:var(--accent);text-decoration:none;">Hysteria2</a> · MIT Licensed engines</p>
   <p style="margin-top: 0.5rem;"><a href="/tos.html" style="color:var(--muted);text-decoration:underline;">Terms of Service & Acceptable Use Policy</a></p>
 </footer>
 
@@ -1252,6 +1252,26 @@
       submitButton.disabled = false;
       submitButton.textContent = 'Continue to payment';
     }
+  });
+
+  // ToS Modal Logic
+  const tosModal = document.getElementById('tosModal');
+  const tosAcceptBtn = document.getElementById('tosAccept');
+  const tosDeclineBtn = document.getElementById('tosDecline');
+
+  if (!localStorage.getItem('tos_accepted')) {
+    tosModal.classList.add('is-open');
+    tosModal.setAttribute('aria-hidden', 'false');
+  }
+
+  tosAcceptBtn.addEventListener('click', () => {
+    localStorage.setItem('tos_accepted', 'true');
+    tosModal.classList.remove('is-open');
+    tosModal.setAttribute('aria-hidden', 'true');
+  });
+
+  tosDeclineBtn.addEventListener('click', () => {
+    window.location.href = 'https://google.com';
   });
 </script>
 

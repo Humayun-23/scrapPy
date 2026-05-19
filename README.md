@@ -1,7 +1,8 @@
-# Scrappy 🕵️‍♂️ 
+# Scrappy 🕵️‍♂️
+
 **The Stealth Web Scraping & Browser Automation API for AI and Data Teams.**
 
-Scrappy is a powerful, hosted API designed to solve the hardest problems in web data extraction. Whether you are building AI agents, RAG pipelines, or market intelligence tools, Scrappy bypasses advanced anti-bot protections to deliver clean, structured data from any website.
+Scrappy is a powerful, self-hostable API designed to solve the hardest problems in web data extraction. Whether you are building AI agents, RAG pipelines, or market intelligence tools, Scrappy bypasses advanced anti-bot protections to deliver clean, structured data from any website.
 
 ---
 
@@ -10,8 +11,9 @@ Scrappy is a powerful, hosted API designed to solve the hardest problems in web 
 Modern websites are heavily protected by WAFs (Cloudflare, Datadome) and rely on complex JavaScript frameworks (React, Vue). Traditional HTTP scrapers fail instantly. 
 
 Scrappy handles the complexity for you:
-- **Invisible to Anti-Bots:** Powered by *CloakBrowser* and routed through *Hysteria2* stealth proxy protocols. Your requests look exactly like legitimate, human web browsing.
-- **Built for the AI Era:** Instantly convert messy web pages into clean, LLM-ready **Markdown** with a single API flag (`extract_markdown: true`).
+
+- **Invisible to Anti-Bots:** Powered by a stealth browser engine and routed through the *Hysteria2* stealth proxy protocol. Your requests look exactly like legitimate, human web browsing.
+- **Built for the AI Era:** Instantly convert messy web pages into clean, LLM-ready **Markdown** or structured JSON with a single API flag.
 - **Full JavaScript Execution:** Scrappy loads and renders Single Page Applications (SPAs) completely before extracting data.
 - **No-Code Interactivity:** Easily define interactions (clicks, scrolls, typing, waiting) using simple JSON arrays. No need to write and maintain brittle Puppeteer or Playwright scripts.
 - **At-Scale Reliability:** Features asynchronous, queue-based scraping for long-running workflows, complete with job status polling and cancellation.
@@ -20,72 +22,129 @@ Scrappy handles the complexity for you:
 
 ## 💡 Core Features
 
-### 1. The Stealth Scraping Engine
-Extract data from heavily protected sites without getting IP-banned. Scrappy automatically rotates IPs through an integrated proxy pool and spoofs browser fingerprints.
+- **Stealth Scraping Engine:** Extract data from heavily protected sites without getting IP-banned. Scrappy automatically rotates IPs through an integrated proxy pool and spoofs browser fingerprints.
+- **AI & LLM Optimized Extractions:** Stop feeding your AI raw HTML. Scrappy can automatically return clean Markdown, structured JSON-LD data, page metadata, and full-page screenshots.
+- **Remote Browser Interactions:** Need to bypass a "Click to load more" button or submit a search form? Pass an array of actions directly in your API request.
+- **Asynchronous Scraping:** For long-running scraping tasks, use the job queue to run them in the background. Poll the `/v1/jobs/{job_id}` endpoint to get the result.
+- **Proxy Access:** Paid plans get direct SOCKS5/HTTP access to the Hysteria2 proxy network.
 
-### 2. AI & LLM Optimized Extractions
-Stop feeding your AI raw HTML. Scrappy can automatically return:
-- Clean Markdown (`extract_markdown: true`)
-- Structured JSON-LD Data (`extract_json: true`)
-- Page Metadata (Title, OpenGraph tags, etc.)
-- Full-page base64 Screenshots
+---
 
-### 3. Remote Browser Interactions
-Need to bypass a "Click to load more" button or submit a search form before scraping? Pass an array of actions directly in your API request:
-```json
-"steps": [
-  { "action": "type", "selector": "#search", "text": "AI pricing" },
-  { "action": "click", "selector": ".submit-btn" },
-  { "action": "wait_for", "selector": ".results-grid" }
-]
-```
-
-2) Update the configs:
-
-- nginx/nginx.conf (server_name + cert paths)
-- hysteria/hysteria-client.yaml (server + auth)
-- hysteria/hysteria-server.yaml (cert paths + auth)
-
-3) Start services:
+## Architecture
 
 ```
-docker compose up -d --build
+Customer → Nginx (TLS) → FastAPI → CloakBrowser → Hysteria2 Client → Hysteria2 Server → Target Website
 ```
 
-4) Create an API key:
+- **Nginx:** Handles TLS termination, rate limiting, and serves the static landing page.
+- **FastAPI:** The core API application, handling authentication, routing, and job management.
+- **Redis:** Used for API key storage, usage tracking, and as a message broker for the job queue.
+- **RQ Worker:** A background process that executes the scraping jobs.
+- **CloakBrowser:** A stealth-patched Chromium browser that is difficult for bot detectors to identify.
+- **Hysteria2:** A high-performance, stealthy proxy protocol that masks traffic as standard HTTP/3.
 
+---
+
+## 📖 API Endpoints
+
+### Scraping
+
+- `POST /v1/scrape`: Scrape a single URL and get the result synchronously.
+- `POST /v1/jobs`: Submit a URL for asynchronous scraping. Returns a `job_id`.
+- `GET /v1/jobs/{job_id}`: Check the status and retrieve the result of an asynchronous job.
+- `POST /v1/batch`: Scrape up to 10 URLs in a single synchronous call.
+
+### API Key Management
+
+- `POST /v1/keys/create`: Create a new API key.
+- `GET /v1/keys/usage`: Check your current API usage and limits.
+- `GET /v1/plans`: List available subscription plans.
+
+### Proxy
+
+- `POST /v1/proxy/credentials`: Get SOCKS5/HTTP proxy credentials for paid plans.
+
+---
+
+## 🚀 Self-Hosting Guide
+
+### 1. Prerequisites
+
+- A domain name (e.g., `your-domain.com`).
+- A VPS with Docker and Docker Compose installed.
+- (Optional but recommended) A separate, clean VPS to run the Hysteria2 server for better stealth.
+
+### 2. Setup & Configuration
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/scrappy.git
+    cd scrappy
+    ```
+
+2.  **Set up SSL:**
+    Obtain SSL certificates for your domain. Let's Encrypt is a good free option.
+    ```bash
+    sudo apt install certbot
+    sudo certbot certonly --standalone -d your-domain.com
+    ```
+
+3.  **Configure Environment Variables:**
+    Copy `.env.example` to `.env` and fill in the values. At a minimum, you need to set `PROXY_SECRET`.
+
+4.  **Update Config Files:**
+    - `nginx/nginx.conf`: Replace `your-domain.com` with your actual domain and update the `ssl_certificate` and `ssl_certificate_key` paths.
+    - `hysteria/hysteria-server.yaml`: Update `cert` and `key` paths and set a strong `auth` password.
+    - `hysteria/hysteria-client.yaml`: Update the `server` address and `auth` password to match the server config.
+
+### 3. Launch
+
+```bash
+docker-compose up -d --build
 ```
-curl -X POST https://<your-domain>/v1/keys/create \
+
+This will start the FastAPI application, the Redis database, and the RQ worker.
+
+### 4. Create an API Key
+
+```bash
+curl -X POST https://your-domain.com/v1/keys/create \
   -H "Content-Type: application/json" \
   -d '{"email": "you@email.com", "plan": "free"}'
 ```
 
-5) Test a scrape:
+### 5. Test a Scrape
 
-```
-curl -X POST https://<your-domain>/v1/scrape \
+```bash
+curl -X POST https://your-domain.com/v1/scrape \
   -H "x-api-key: sk_your_key_here" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com"}'
 ```
 
-## Frontend
+---
 
-The landing page is served by Nginx from index.html at the repo root.
+## ⚙️ Configuration
 
-## Notes
+Key environment variables to set in your `docker-compose.yml` or `.env` file:
 
-- Hysteria2 server can run in the same compose file or on a separate node.
-- CloakBrowser is resource-heavy; tune MAX_CONCURRENT_BROWSERS to available RAM.
+- `MAX_CONCURRENT_BROWSERS`: The number of concurrent browser instances. Tune this based on your server's RAM. Each browser consumes ~300MB.
+- `REDIS_URL`: The connection URL for your Redis instance.
+- `HYSTERIA_PROXY`: The address of your Hysteria2 client proxy (e.g., `socks5://127.0.0.1:1080`).
+- `PROXY_SECRET`: A secret key used for generating temporary proxy credentials.
 
-## File Structure
+---
+
+## 📂 File Structure
 
 ```
 scrappy/
 ├── app/
+│   ├── api/             # FastAPI route modules
+│   ├── core/            # Core logic (settings, keys)
 │   ├── jobs.py          # RQ job helpers
-│   ├── main.py          # FastAPI routes + auth
-│   ├── scraper.py       # CloakBrowser engine + steps
+│   ├── main.py          # FastAPI app entrypoint
+│   ├── scraper.py       # CloakBrowser scraping engine
 │   └── proxy.py         # Hysteria2 credential generator
 ├── hysteria/
 │   ├── Dockerfile
@@ -93,9 +152,9 @@ scrappy/
 │   └── hysteria-client.yaml
 ├── nginx/
 │   └── nginx.conf
-├── index.html
+├── index.html           # Static landing page
 ├── docker-compose.yml
-├── Dockerfile
-├── requirements.txt
-└── .env
+├── Dockerfile           # For the main FastAPI app
+└── requirements.txt
 ```
+
