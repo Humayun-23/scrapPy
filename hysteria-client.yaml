@@ -1,0 +1,30 @@
+# hysteria-client.yaml
+# Runs on the SAME machine as FastAPI
+# Creates a local SOCKS5 proxy on :1080 that CloakBrowser uses
+
+server: us1.scrappy.io:443   # your Hysteria2 server node
+
+# Auth credentials (match what your server expects)
+auth: scrappy-internal-client-secret
+
+# TLS — verify your server cert
+tls:
+  sni: us1.scrappy.io
+  insecure: false             # set true only for testing
+
+# Bandwidth hints — adjust to your VPS uplink
+bandwidth:
+  up: 100 mbps
+  down: 500 mbps
+
+# Local SOCKS5 proxy — CloakBrowser connects to this
+socks5:
+  listen: 127.0.0.1:1080     # matches HYSTERIA_PROXY env var in scraper.py
+
+# Local HTTP proxy — optional
+http:
+  listen: 127.0.0.1:8888
+
+# Fast-close — reduces latency for short-lived browser sessions
+fastOpen: true
+lazy: true

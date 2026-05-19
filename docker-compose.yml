@@ -1,0 +1,81 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Scrappy — Docker Compose
+# Services: FastAPI + Redis + Hysteria2 client + Nginx
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── FastAPI Backend ──────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scrappy-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - HYSTERIA_PROXY=socks5://hysteria-client:1080
+      - MAX_CONCURRENT_BROWSERS=5
+      - PROXY_SECRET=${PROXY_SECRET}
+      # Hysteria2 node hostnames
+      - HYSTERIA_US_HOST=${HYSTERIA_US_HOST}
+      - HYSTERIA_EU_HOST=${HYSTERIA_EU_HOST}
+      - HYSTERIA_ASIA_HOST=${HYSTERIA_ASIA_HOST}
+    depends_on:
+      - redis
+      - hysteria-client
+    networks:
+      - scrappy-net
+    # Shared memory for Chromium
+    shm_size: "2gb"
+
+  # ── Redis (usage tracking + API keys) ────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: scrappy-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    networks:
+      - scrappy-net
+
+  # ── Hysteria2 Client (QUIC tunnel → your server nodes) ───────────────────
+  hysteria-client:
+    image: tobyxdd/hysteria:latest
+    container_name: scrappy-hysteria-client
+    restart: unless-stopped
+    volumes:
+      - ./hysteria/hysteria-client.yaml:/etc/hysteria/client.yaml:ro
+    command: client -c /etc/hysteria/client.yaml
+    networks:
+      - scrappy-net
+    cap_add:
+      - NET_ADMIN
+
+  # ── Nginx (TLS termination + rate limiting) ───────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: scrappy-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - api
+    networks:
+      - scrappy-net
+
+volumes:
+  redis-data:
+
+networks:
+  scrappy-net:
+    driver: bridge

@@ -1,0 +1,45 @@
+# hysteria-server.yaml
+# Deploy this on each of your VPS nodes
+# Docs: https://v2.hysteria.network/docs/advanced/Full-Server-Config/
+
+listen: :443
+
+# TLS — use your domain cert (certbot / acme.sh)
+tls:
+  cert: /etc/letsencrypt/live/us1.scrappy.io/fullchain.pem
+  key:  /etc/letsencrypt/live/us1.scrappy.io/privkey.pem
+
+# Masquerade as a real HTTPS site — makes traffic look like HTTP/3
+masquerade:
+  type: proxy
+  proxy:
+    url: https://news.ycombinator.com  # traffic looks like this site
+    rewriteHost: true
+
+# QUIC bandwidth — tune to your VPS NIC
+quic:
+  initStreamReceiveWindow: 26843545
+  maxStreamReceiveWindow:  26843545
+  initConnReceiveWindow:   67108864
+  maxConnReceiveWindow:    67108864
+
+# Auth backend — calls your FastAPI /internal/proxy-auth
+auth:
+  type: http
+  http:
+    url: http://127.0.0.1:8000/internal/proxy-auth
+    insecure: false
+
+# Outbound — route through your server's clean IP
+outbound:
+  default:
+    type: direct
+
+# Bandwidth per client (adjust per plan in production with ACLs)
+bandwidth:
+  up: 200 mbps
+  down: 1 gbps
+
+# SOCKS5 inbound for CloakBrowser
+trafficStats:
+  listen: 127.0.0.1:9999  # internal stats API
