@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from ..core.redis import get_redis
+from ...core.redis import get_redis
 
 router = APIRouter()
 
