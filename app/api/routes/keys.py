@@ -1,6 +1,7 @@
 import os
-import smtplib
-from email.message import EmailMessage
+import json
+import urllib.request
+import urllib.error
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
@@ -15,32 +16,40 @@ router = APIRouter(prefix="/v1")
 
 
 def send_api_key_email(email_address: str, api_key: str):
-    """Sends the generated API key to the user's email."""
-    smtp_server = os.getenv("SMTP_SERVER")
-    smtp_port = int(os.getenv("SMTP_PORT", "587"))
-    smtp_user = os.getenv("SMTP_USER")
-    smtp_pass = os.getenv("SMTP_PASS")
-    smtp_from = os.getenv("SMTP_FROM", smtp_user)
+    """Sends the API key using Brevo's HTTP API, bypassing SMTP blocks."""
+    brevo_api_key = os.getenv("BREVO_API_KEY")
+    email_from = os.getenv("EMAIL_FROM")
     
-    if not all([smtp_server, smtp_user, smtp_pass]):
-        # Fallback for local development if SMTP is not configured
+    if not brevo_api_key or not email_from:
         print(f"\n[EMAIL MOCK] To: {email_address} | Subject: Your Scrappie API Key\nKey: {api_key}\n")
-        return
+        return True, "Email mocked (BREVO_API_KEY or EMAIL_FROM missing from .env)"
 
-    msg = EmailMessage()
-    msg.set_content(f"Welcome to Scrappie!\n\nYour free API key is: {api_key}\n\nKeep it secret, keep it safe.")
-    msg["Subject"] = "Your Scrappie API Key"
-    msg["From"] = smtp_from
-    msg["To"] = email_address
+    url = "https://api.brevo.com/v3/smtp/email"
+    payload = {
+        "sender": {"email": email_from, "name": "Scrappie API"},
+        "to": [{"email": email_address}],
+        "subject": "Your Scrappie API Key",
+        "htmlContent": f"<p>Welcome to Scrappie!</p><p>Your free API key is: <strong>{api_key}</strong></p><p>Keep it secret, keep it safe.</p>"
+    }
+    
+    headers = {
+        "accept": "application/json",
+        "api-key": brevo_api_key,
+        "content-type": "application/json"
+    }
 
     try:
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_pass)
-            server.send_message(msg)
-            print(f"[EMAIL SUCCESS] API key sent to {email_address}")
+        req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+        with urllib.request.urlopen(req) as response:
+            print(f"[EMAIL SUCCESS] API key sent to {email_address} via API")
+            return True, "Sent successfully via Brevo API"
+    except urllib.error.HTTPError as e:
+        err_msg = e.read().decode("utf-8")
+        print(f"Failed to send email to {email_address}: {e.code} - {err_msg}")
+        return False, f"API Error {e.code}: {err_msg}"
     except Exception as e:
         print(f"Failed to send email to {email_address}: {e}")
+        return False, f"Request Error: {str(e)}"
 
 
 @router.post("/keys/create")
@@ -69,15 +78,16 @@ async def create_key(req: KeyCreateRequest, request: Request, background_tasks: 
     email = normalize_email(req.email)
     api_key = await create_api_key(redis, email, req.plan)
     
-    # 3. Send email in background to avoid blocking the HTTP response
-    background_tasks.add_task(send_api_key_email, email, api_key)
+    # 3. Send email via HTTP API synchronously to catch errors
+    success, debug_msg = send_api_key_email(email, api_key)
     
     # 4. Return generic success message
     return {
-        "success": True,
+        "success": success,
         "plan": req.plan,
         "monthly_limit": PLANS[req.plan]["requests"],
         "message": f"If {email} is valid, your API key has been sent there.",
+        "debug_info": debug_msg
     }
 
 
