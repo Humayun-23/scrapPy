@@ -46,7 +46,7 @@ services:
 
   # ── Hysteria2 Client (SOCKS5 proxy for CloakBrowser) ────────────────────────
   hysteria-client:
-    image: tomlokhorst/hysteria:latest
+    image: ghcr.io/apernet/hysteria:latest
     container_name: scrappy-hysteria-client
     restart: unless-stopped
     volumes:
