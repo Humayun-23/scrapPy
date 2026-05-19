@@ -1,46 +1,43 @@
-# Scrappy - Stealth Scraping API + Hosted Browser
+# Scrappy 🕵️‍♂️ 
+**The Stealth Web Scraping & Browser Automation API for AI and Data Teams.**
 
-Scrappy is a hosted web scraping API and browser automation service built on CloakBrowser and Hysteria2. It provides sync and async scraping, optional JS interaction steps, and a proxy layer for stealthy traffic.
+Scrappy is a powerful, hosted API designed to solve the hardest problems in web data extraction. Whether you are building AI agents, RAG pipelines, or market intelligence tools, Scrappy bypasses advanced anti-bot protections to deliver clean, structured data from any website.
 
-## What It Does
+---
 
-- Scrape URLs and return HTML + metadata
-- Render JS-heavy pages
-- Run interaction steps (click, fill, scroll, wait)
-- Async jobs with status + cancel
-- Optional proxy credentials for paid plans
-- Static landing page served by Nginx
+## 🚀 Why Scrappy?
 
-## Architecture
+Modern websites are heavily protected by WAFs (Cloudflare, Datadome) and rely on complex JavaScript frameworks (React, Vue). Traditional HTTP scrapers fail instantly. 
 
-```
-Client -> Nginx (TLS + frontend) -> FastAPI -> CloakBrowser
-                          |                 -> Redis (usage + queue)
-                          |                 -> RQ Worker (async jobs)
-                          -> Hysteria2 Client -> Hysteria2 Server -> Web
-```
+Scrappy handles the complexity for you:
+- **Invisible to Anti-Bots:** Powered by *CloakBrowser* and routed through *Hysteria2* stealth proxy protocols. Your requests look exactly like legitimate, human web browsing.
+- **Built for the AI Era:** Instantly convert messy web pages into clean, LLM-ready **Markdown** with a single API flag (`extract_markdown: true`).
+- **Full JavaScript Execution:** Scrappy loads and renders Single Page Applications (SPAs) completely before extracting data.
+- **No-Code Interactivity:** Easily define interactions (clicks, scrolls, typing, waiting) using simple JSON arrays. No need to write and maintain brittle Puppeteer or Playwright scripts.
+- **At-Scale Reliability:** Features asynchronous, queue-based scraping for long-running workflows, complete with job status polling and cancellation.
 
-## API Endpoints (MVP)
+---
 
-- POST /v1/scrape
-- POST /v1/render
-- POST /v1/browser
-- POST /v1/scrape/async
-- POST /v1/render/async
-- POST /v1/browser/async
-- GET  /v1/jobs/{job_id}
-- POST /v1/jobs/{job_id}/cancel
-- POST /v1/keys/create
-- GET  /v1/keys/usage
-- GET  /v1/plans
+## 💡 Core Features
 
-## Quick Start (Docker Compose)
+### 1. The Stealth Scraping Engine
+Extract data from heavily protected sites without getting IP-banned. Scrappy automatically rotates IPs through an integrated proxy pool and spoofs browser fingerprints.
 
-1) Ensure TLS certs are available on the VM:
+### 2. AI & LLM Optimized Extractions
+Stop feeding your AI raw HTML. Scrappy can automatically return:
+- Clean Markdown (`extract_markdown: true`)
+- Structured JSON-LD Data (`extract_json: true`)
+- Page Metadata (Title, OpenGraph tags, etc.)
+- Full-page base64 Screenshots
 
-```
-/etc/letsencrypt/live/<your-domain>/fullchain.pem
-/etc/letsencrypt/live/<your-domain>/privkey.pem
+### 3. Remote Browser Interactions
+Need to bypass a "Click to load more" button or submit a search form before scraping? Pass an array of actions directly in your API request:
+```json
+"steps": [
+  { "action": "type", "selector": "#search", "text": "AI pricing" },
+  { "action": "click", "selector": ".submit-btn" },
+  { "action": "wait_for", "selector": ".results-grid" }
+]
 ```
 
 2) Update the configs:
