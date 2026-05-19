@@ -30,6 +30,8 @@ services:
     depends_on:
       - redis
       - hysteria-client
+    volumes:
+      - ./app:/app/app
     networks:
       - scrappy-net
     # Shared memory for Chromium
@@ -104,6 +106,8 @@ services:
     depends_on:
       - redis
       - hysteria-client
+    volumes:
+      - ./app:/app/app
     networks:
       - scrappy-net
     shm_size: "2gb"
