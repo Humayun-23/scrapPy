@@ -1113,7 +1113,7 @@
       <h3>Upgrade plan (Gumroad checkout)</h3>
       <pre class="auth-code">curl -X POST https://scrappie.tech/v1/billing/checkout \
   -H "Content-Type: application/json" \
-  -d '{"email":"you@email.com","plan":"growth"}'</pre>
+  -d '{"api_key":"sk_your_api_key","plan":"growth"}'</pre>
       <p class="auth-note">Checkout URL is returned in the response.</p>
     </div>
   </div>
@@ -1137,7 +1137,8 @@
     <div class="modal-label">Selected plan</div>
     <div class="modal-plan" id="checkoutPlan">growth</div>
     <form id="checkoutForm">
-      <input class="modal-input" type="email" id="checkoutEmail" placeholder="Email for checkout" required />
+      <input class="modal-input" type="text" id="checkoutApiKey" placeholder="sk_your_api_key" required />
+      <div class="modal-message" style="margin-bottom: 1rem; margin-top: -0.5rem;">Don't have one? Generate a free key first!</div>
       <div class="modal-actions">
         <button class="btn btn-primary" type="submit" id="checkoutSubmit">Continue to payment</button>
         <button class="btn btn-outline" type="button" id="checkoutCancel">Cancel</button>
@@ -1178,28 +1179,28 @@
 <script>
   const modal = document.getElementById('checkoutModal');
   const planLabel = document.getElementById('checkoutPlan');
-  const emailInput = document.getElementById('checkoutEmail');
+  const apiKeyInput = document.getElementById('checkoutApiKey');
   const submitButton = document.getElementById('checkoutSubmit');
   const message = document.getElementById('checkoutMessage');
   const form = document.getElementById('checkoutForm');
   let selectedPlan = null;
 
-  function requestCheckout(plan, email) {
+  function requestCheckout(plan, apiKey) {
     return fetch('/v1/billing/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email, plan: plan })
+      body: JSON.stringify({ api_key: apiKey, plan: plan })
     }).then((response) => response.json());
   }
 
   function openModal(plan) {
     selectedPlan = plan;
     planLabel.textContent = plan;
-    emailInput.value = '';
+    apiKeyInput.value = '';
     message.textContent = '';
     modal.classList.add('is-open');
     modal.setAttribute('aria-hidden', 'false');
-    emailInput.focus();
+    apiKeyInput.focus();
   }
 
   function closeModal() {
@@ -1224,9 +1225,9 @@
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const email = emailInput.value.trim();
-    if (!email) {
-      emailInput.focus();
+    const apiKey = apiKeyInput.value.trim();
+    if (!apiKey) {
+      apiKeyInput.focus();
       return;
     }
     if (!selectedPlan) {
@@ -1239,7 +1240,7 @@
     message.textContent = '';
 
     try {
-      const result = await requestCheckout(selectedPlan, email);
+      const result = await requestCheckout(selectedPlan, apiKey);
       if (result.checkout_url) {
         window.location.href = result.checkout_url;
         return;

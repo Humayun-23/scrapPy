@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import Optional
 
 
-async def create_api_key(redis, email: str, plan: str) -> str:
-    api_key = "sk_" + str(uuid.uuid4()).replace("-", "")
+async def create_api_key(redis, email: str, plan: str, provided_key: Optional[str] = None) -> str:
+    api_key = provided_key or ("sk_" + str(uuid.uuid4()).replace("-", ""))
     await redis.hset(f"apikey:{api_key}", mapping={
         "email": email,
         "plan": plan,

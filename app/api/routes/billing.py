@@ -21,7 +21,14 @@ async def billing_checkout(req: CheckoutRequest):
     if plan not in PLANS or plan == "free":
         raise HTTPException(status_code=400, detail="Paid plan required")
 
-    checkout_url = get_gumroad_url(plan, req.email)
+    redis = await get_redis()
+    key_data = await redis.hgetall(f"apikey:{req.api_key}")
+    if not key_data:
+        raise HTTPException(status_code=404, detail="Invalid API key. Please generate a free key first.")
+    
+    email = key_data.get("email")
+
+    checkout_url = get_gumroad_url(plan, email)
     return {"checkout_url": checkout_url, "session_id": "gumroad"}
 
 
@@ -41,6 +48,7 @@ async def billing_webhook(request: Request):
     email = payload.get("email")
     permalink = payload.get("permalink")
     seller_id = payload.get("seller_id")
+    license_key = payload.get("license_key")
     
     # Security check: verify the ping actually came from your Gumroad account
     if GUMROAD_SELLER_ID and seller_id != GUMROAD_SELLER_ID:
@@ -66,9 +74,14 @@ async def billing_webhook(request: Request):
         
         keys = await redis.smembers(f"keys:email:{email}")
         if not keys:
-            await create_api_key(redis, email, plan)
+            # Direct purchase: use the Gumroad license key as their API key
+            await create_api_key(redis, email, plan, provided_key=license_key)
         else:
+            # Upgrade their existing 'sk_' keys
             for api_key in keys:
                 await redis.hset(f"apikey:{api_key}", mapping={"plan": plan})
+            # Also register the Gumroad license key so both work seamlessly
+            if license_key and license_key not in keys:
+                await create_api_key(redis, email, plan, provided_key=license_key)
 
     return JSONResponse({"received": True})

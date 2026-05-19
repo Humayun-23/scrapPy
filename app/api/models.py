@@ -50,7 +50,7 @@ class KeyCreateRequest(BaseModel):
 
 
 class CheckoutRequest(BaseModel):
-    email: str
+    api_key: str
     plan: str
     success_url: Optional[str] = None
     cancel_url: Optional[str] = None
