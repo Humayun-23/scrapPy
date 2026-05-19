@@ -9,7 +9,7 @@ from typing import Optional
 from cloakbrowser import launch_async, launch_context
 
 # Hysteria2 SOCKS5 proxy (set via env)
-HYSTERIA_PROXY = os.getenv("HYSTERIA_PROXY", "socks5://127.0.0.1:1080")
+HYSTERIA_PROXY = os.getenv("HYSTERIA_PROXY") or None
 
 # Semaphore: max concurrent browser instances (tune to your VPS RAM)
 # Each CloakBrowser instance uses ~300MB RAM
@@ -31,7 +31,7 @@ async def scrape_url(
     async with _semaphore:
         browser = await launch_async(
             headless=True,
-            proxy=HYSTERIA_PROXY,
+            **({'proxy': HYSTERIA_PROXY} if HYSTERIA_PROXY else {})
         )
         try:
             page = await browser.new_page()
