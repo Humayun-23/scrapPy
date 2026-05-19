@@ -11,8 +11,10 @@ from fastapi import FastAPI, HTTPException, Depends, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, HttpUrl
+from rq.exceptions import NoSuchJobError
 
-from .scraper import scrape_url, render_url, batch_scrape
+from .jobs import enqueue_job, fetch_job
+from .scraper import scrape_url, render_url, batch_scrape, browser_url
 from .proxy import get_proxy_credentials
 
 # ── App ──────────────────────────────────────────────────────────────────────
@@ -68,6 +70,27 @@ class ScrapeRequest(BaseModel):
     url: str
     wait_for: Optional[str] = None        # CSS selector to wait for
     extract_json: Optional[bool] = False  # Try to extract JSON-LD / meta
+    screenshot: Optional[bool] = False
+    timeout: Optional[int] = 30
+
+
+class ActionStep(BaseModel):
+    action: str
+    selector: Optional[str] = None
+    value: Optional[str] = None
+    text: Optional[str] = None
+    wait_ms: Optional[int] = None
+    timeout_ms: Optional[int] = None
+    delay_ms: Optional[int] = None
+    x: Optional[int] = None
+    y: Optional[int] = None
+
+
+class BrowserRequest(BaseModel):
+    url: str
+    steps: Optional[list[ActionStep]] = None
+    wait_for: Optional[str] = None
+    extract_json: Optional[bool] = False
     screenshot: Optional[bool] = False
     timeout: Optional[int] = 30
 
@@ -151,6 +174,20 @@ async def render(req: ScrapeRequest, auth: dict = Depends(verify_api_key)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/v1/render/async")
+async def render_async(req: ScrapeRequest, auth: dict = Depends(verify_api_key)):
+    job = enqueue_job("render", req.model_dump())
+    return {
+        "success": True,
+        "job_id": job.id,
+        "status": job.get_status(),
+        "status_url": f"/v1/jobs/{job.id}",
+        "plan": auth["plan"],
+        "requests_used": auth["usage"],
+        "requests_remaining": auth["limit"] - auth["usage"],
+    }
+
+
 @app.post("/v1/batch")
 async def batch(req: BatchRequest, auth: dict = Depends(verify_api_key)):
     """
@@ -170,6 +207,93 @@ async def batch(req: BatchRequest, auth: dict = Depends(verify_api_key)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/v1/scrape/async")
+async def scrape_async(req: ScrapeRequest, auth: dict = Depends(verify_api_key)):
+    job = enqueue_job("scrape", req.model_dump())
+    return {
+        "success": True,
+        "job_id": job.id,
+        "status": job.get_status(),
+        "status_url": f"/v1/jobs/{job.id}",
+        "plan": auth["plan"],
+        "requests_used": auth["usage"],
+        "requests_remaining": auth["limit"] - auth["usage"],
+    }
+
+
+@app.post("/v1/browser")
+async def browser(req: BrowserRequest, auth: dict = Depends(verify_api_key)):
+    try:
+        start = time.time()
+        result = await browser_url(
+            url=req.url,
+            steps=[step.model_dump() for step in (req.steps or [])],
+            wait_for=req.wait_for,
+            extract_json=req.extract_json,
+            screenshot=req.screenshot,
+            timeout=req.timeout,
+        )
+        elapsed = round(time.time() - start, 2)
+        return {
+            "success": True,
+            "url": req.url,
+            "elapsed_seconds": elapsed,
+            "plan": auth["plan"],
+            "requests_used": auth["usage"],
+            "requests_remaining": auth["limit"] - auth["usage"],
+            **result,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/v1/browser/async")
+async def browser_async(req: BrowserRequest, auth: dict = Depends(verify_api_key)):
+    payload = req.model_dump()
+    payload["steps"] = [step.model_dump() for step in (req.steps or [])]
+    job = enqueue_job("browser", payload)
+    return {
+        "success": True,
+        "job_id": job.id,
+        "status": job.get_status(),
+        "status_url": f"/v1/jobs/{job.id}",
+        "plan": auth["plan"],
+        "requests_used": auth["usage"],
+        "requests_remaining": auth["limit"] - auth["usage"],
+    }
+
+
+@app.get("/v1/jobs/{job_id}")
+async def job_status(job_id: str, auth: dict = Depends(verify_api_key)):
+    try:
+        job = fetch_job(job_id)
+    except NoSuchJobError:
+        raise HTTPException(status_code=404, detail="Job not found")
+    status = job.get_status()
+    response = {
+        "job_id": job.id,
+        "status": status,
+    }
+    if status == "finished":
+        response["result"] = job.result
+    return response
+
+
+@app.post("/v1/jobs/{job_id}/cancel")
+async def job_cancel(job_id: str, auth: dict = Depends(verify_api_key)):
+    try:
+        job = fetch_job(job_id)
+    except NoSuchJobError:
+        raise HTTPException(status_code=404, detail="Job not found")
+    status = job.get_status()
+    if status in {"finished", "failed", "canceled"}:
+        raise HTTPException(status_code=409, detail=f"Job already {status}")
+    job.cancel()
+    if status == "started":
+        return {"job_id": job.id, "status": "cancel_requested"}
+    return {"job_id": job.id, "status": "canceled"}
 
 
 # ─── Proxy ─────────────────────────────────────────────────────────────────────

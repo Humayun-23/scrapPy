@@ -19,11 +19,11 @@ bandwidth:
 
 # Local SOCKS5 proxy — CloakBrowser connects to this
 socks5:
-  listen: 127.0.0.1:1080     # matches HYSTERIA_PROXY env var in scraper.py
+  listen: 0.0.0.0:1080       # allow access from other containers
 
 # Local HTTP proxy — optional
 http:
-  listen: 127.0.0.1:8888
+  listen: 0.0.0.0:8888
 
 # Fast-close — reduces latency for short-lived browser sessions
 fastOpen: true

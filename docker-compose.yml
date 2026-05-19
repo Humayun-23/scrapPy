@@ -57,6 +57,26 @@ services:
       - scrappy-net
     command: ["-c", "/etc/hysteria/config.yaml", "client"]
 
+  # ── Worker (RQ job processor) ─────────────────────────────────────────────
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scrappy-worker
+    restart: unless-stopped
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - HYSTERIA_PROXY=socks5://hysteria-client:1080
+      - MAX_CONCURRENT_BROWSERS=5
+      - JOB_QUEUE_NAME=scrappy
+    depends_on:
+      - redis
+      - hysteria-client
+    networks:
+      - scrappy-net
+    shm_size: "2gb"
+    command: ["python", "-m", "rq", "worker", "scrappy"]
+
   # ── Nginx (TLS termination + rate limiting) ───────────────────────────────
   nginx:
     image: nginx:alpine
