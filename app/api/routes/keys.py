@@ -20,6 +20,7 @@ def send_api_key_email(email_address: str, api_key: str):
     smtp_port = int(os.getenv("SMTP_PORT", "587"))
     smtp_user = os.getenv("SMTP_USER")
     smtp_pass = os.getenv("SMTP_PASS")
+    smtp_from = os.getenv("SMTP_FROM", smtp_user)
     
     if not all([smtp_server, smtp_user, smtp_pass]):
         # Fallback for local development if SMTP is not configured
@@ -29,7 +30,7 @@ def send_api_key_email(email_address: str, api_key: str):
     msg = EmailMessage()
     msg.set_content(f"Welcome to Scrappie!\n\nYour free API key is: {api_key}\n\nKeep it secret, keep it safe.")
     msg["Subject"] = "Your Scrappie API Key"
-    msg["From"] = smtp_user
+    msg["From"] = smtp_from
     msg["To"] = email_address
 
     try:
