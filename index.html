@@ -3,12 +3,25 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Scrappy — Stealth Scraping API + Hosted Browser</title>
+<title>Scrappy | Stealth Web Scraping & Browser Automation API for AI</title>
+<meta name="description" content="Scrappy is the ultimate stealth web scraping and browser automation API. Bypass Cloudflare, render JavaScript, automate interactions, and extract clean JSON or Markdown for AI."/>
+<meta name="keywords" content="web scraping API, bypass cloudflare, stealth proxy, headless browser, LLM markdown, data extraction, AI web scraper, Playwright API"/>
+<meta property="og:title" content="Scrappy — Stealth Scraping API + Hosted Browser"/>
+<meta property="og:description" content="Bypass WAFs and bot detection. Extract clean HTML, JSON, and Markdown from any website with our stealth headless browser API."/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://scrappie.tech/"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Scrappy — Stealth Scraping API"/>
+<meta name="twitter:description" content="Bypass WAFs and bot detection. Extract clean HTML, JSON, and Markdown from any website."/>
+<link rel="canonical" href="https://scrappie.tech/"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<!-- Plausible Analytics (Privacy-friendly, GDPR compliant tracking) -->
+<script defer data-domain="scrappie.tech" src="https://plausible.io/js/script.js"></script>
 <style>
   :root {
     --bg:       #080a0f;
+    --bg-center:#111827;
     --surface:  #0e1117;
     --border:   #1e2430;
     --accent:   #00ff88;
@@ -16,6 +29,24 @@
     --text:     #e8eaf0;
     --muted:    #5a6070;
     --danger:   #ff4060;
+    --nav-bg:   rgba(8,10,15,.85);
+    --glass:    rgba(14, 17, 23, 0.7);
+    --code-bg:  #0b0f15;
+  }
+
+  [data-theme="light"] {
+    --bg:       #f9fafb;
+    --bg-center:#ffffff;
+    --surface:  #ffffff;
+    --border:   #e5e7eb;
+    --accent:   #00b359;
+    --accent2:  #0077ff;
+    --text:     #111827;
+    --muted:    #6b7280;
+    --danger:   #ef4444;
+    --nav-bg:   rgba(255, 255, 255, 0.85);
+    --glass:    rgba(255, 255, 255, 0.7);
+    --code-bg:  #f3f4f6;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,7 +54,7 @@
   html { scroll-behavior: smooth; }
 
   body {
-    background: var(--bg);
+    background: radial-gradient(circle at top center, var(--bg-center), var(--bg) 60%);
     color: var(--text);
     font-family: 'Sora', sans-serif;
     line-height: 1.6;
@@ -54,7 +85,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 1.2rem 2.5rem;
-    background: rgba(8,10,15,.85);
+    background: var(--nav-bg);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
   }
@@ -105,18 +136,19 @@
   }
 
   .btn-primary {
-    background: var(--accent);
+    background: linear-gradient(135deg, var(--accent), #00cc66);
     color: #000;
+    box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2);
   }
 
   .btn-primary:hover {
-    background: #fff;
-    transform: translateY(-1px);
-    box-shadow: 0 0 30px rgba(0,255,136,.3);
+    background: linear-gradient(135deg, #fff, #e8eaf0);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
   }
 
   .btn-outline {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.03);
     color: var(--text);
     border: 1px solid var(--border);
   }
@@ -124,6 +156,23 @@
   .btn-outline:hover {
     border-color: var(--accent);
     color: var(--accent);
+  }
+
+  .theme-toggle {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem;
+    border-radius: 50%;
+    transition: all .2s;
+  }
+  .theme-toggle:hover {
+    color: var(--text);
+    background: rgba(128, 128, 128, 0.1);
   }
 
   /* ── Hero ── */
@@ -141,11 +190,11 @@
 
   .hero-glow {
     position: absolute;
-    top: 20%;
+    top: 10%;
     left: 50%;
     transform: translateX(-50%);
-    width: 700px;
-    height: 400px;
+    width: 800px;
+    height: 500px;
     background: radial-gradient(ellipse, rgba(0,255,136,.12) 0%, transparent 70%);
     pointer-events: none;
   }
@@ -178,7 +227,7 @@
   }
 
   h1 {
-    font-size: clamp(3rem, 8vw, 7rem);
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
     font-weight: 800;
     line-height: 1;
     letter-spacing: -1.5px;
@@ -212,7 +261,8 @@
   /* ── Code block ── */
   .code-block {
     position: relative;
-    background: var(--surface);
+    background: var(--glass);
+    backdrop-filter: blur(12px);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 1.5rem 2rem;
@@ -223,6 +273,7 @@
     margin: 3rem auto 0;
     animation: fadeDown .8s ease .4s both;
     overflow: hidden;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
   }
 
   .code-block::before {
@@ -341,18 +392,20 @@
   }
 
   .feature-card {
-    background: var(--surface);
+    background: var(--glass);
+    backdrop-filter: blur(10px);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 2rem;
-    transition: border-color .2s, transform .2s;
+    transition: border-color .3s, transform .3s, box-shadow .3s;
     position: relative;
     overflow: hidden;
   }
 
   .feature-card:hover {
     border-color: var(--accent);
-    transform: translateY(-4px);
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(0, 255, 136, 0.05);
   }
 
   .feature-card::after {
@@ -394,12 +447,18 @@
   }
 
   .product-card {
-    background: linear-gradient(135deg, rgba(0,255,136,.05), rgba(14,17,23,.9));
+    background: linear-gradient(135deg, rgba(0,255,136,.05), var(--glass));
     border: 1px solid var(--border);
     border-radius: 16px;
     padding: 2rem;
     position: relative;
     overflow: hidden;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+  }
+
+  .product-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(0, 255, 136, 0.3);
   }
 
   .product-tag {
@@ -449,7 +508,13 @@
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 1.75rem;
-    background: rgba(14,17,23,.8);
+    background: var(--glass);
+    transition: all 0.3s ease;
+  }
+
+  .value-card:hover {
+    background: var(--surface);
+    border-color: rgba(0, 255, 136, 0.2);
   }
 
   .value-title {
@@ -485,7 +550,7 @@
   .auth-code {
     font-family: 'Space Mono', monospace;
     font-size: .75rem;
-    background: #0b0f15;
+    background: var(--code-bg);
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 1rem;
@@ -502,7 +567,7 @@
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(8, 10, 15, 0.8);
+    background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(8px);
     display: none;
     align-items: center;
@@ -544,6 +609,10 @@
     cursor: pointer;
   }
 
+  .modal-close:hover {
+    color: var(--text);
+  }
+
   .modal-label {
     font-size: .75rem;
     letter-spacing: 1px;
@@ -563,7 +632,7 @@
     padding: .8rem 1rem;
     border-radius: 10px;
     border: 1px solid var(--border);
-    background: #0b0f15;
+    background: var(--code-bg);
     color: var(--text);
     font-size: .9rem;
     margin-bottom: 1rem;
@@ -719,6 +788,19 @@
     border-top: 1px solid var(--border);
   }
 
+  /* ── ToS Modal Specific ── */
+  #tosModal {
+    z-index: 9999; /* Ensure it stays on top of everything */
+    backdrop-filter: blur(15px);
+    background: rgba(0, 0, 0, 0.85);
+  }
+  
+  .tos-text {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+
   /* ── Footer ── */
   footer {
     border-top: 1px solid var(--border);
@@ -754,6 +836,12 @@
     <li><a href="#features">Features</a></li>
     <li><a href="#pricing">Pricing</a></li>
     <li><a href="/docs">Docs</a></li>
+    <li>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg id="sunIcon" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+    </li>
     <li><a href="#auth" class="btn btn-primary">Get API key</a></li>
   </ul>
 </nav>
@@ -967,7 +1055,7 @@
 
     <div class="price-card">
       <p class="price-name">Starter</p>
-      <div class="price-amount"><sup>$</sup>49<sub>/mo</sub></div>
+      <div class="price-amount"><sup>$</sup>29<sub>/mo</sub></div>
       <p class="price-requests">10,000 requests / month</p>
       <ul class="price-features">
         <li>Everything in Free</li>
@@ -982,7 +1070,7 @@
     <div class="price-card featured">
       <span class="price-badge">MOST POPULAR</span>
       <p class="price-name">Growth</p>
-      <div class="price-amount"><sup>$</sup>149<sub>/mo</sub></div>
+      <div class="price-amount"><sup>$</sup>139<sub>/mo</sub></div>
       <p class="price-requests">50,000 requests / month</p>
       <ul class="price-features">
         <li>Everything in Starter</li>
@@ -995,7 +1083,7 @@
 
     <div class="price-card">
       <p class="price-name">Scale</p>
-      <div class="price-amount"><sup>$</sup>499<sub>/mo</sub></div>
+      <div class="price-amount"><sup>$</sup>449<sub>/mo</sub></div>
       <p class="price-requests">200,000 requests / month</p>
       <ul class="price-features">
         <li>Everything in Growth</li>
@@ -1011,7 +1099,7 @@
 <!-- Auth -->
 <section id="auth">
   <p class="section-label">// Keys + Billing</p>
-  <h2>Get a key instantly.<br/><em>Upgrade with Stripe.</em></h2>
+  <h2>Get a key instantly.<br/><em>Upgrade with Gumroad.</em></h2>
   <p class="section-desc">No accounts required. Create a key by email, then upgrade in one click.</p>
   <div class="auth-grid">
     <div class="auth-card">
@@ -1022,7 +1110,7 @@
       <p class="auth-note">Response includes your API key.</p>
     </div>
     <div class="auth-card">
-      <h3>Upgrade plan (Stripe checkout)</h3>
+      <h3>Upgrade plan (Gumroad checkout)</h3>
       <pre class="auth-code">curl -X POST https://scrappie.tech/v1/billing/checkout \
   -H "Content-Type: application/json" \
   -d '{"email":"you@email.com","plan":"growth"}'</pre>
@@ -1059,9 +1147,32 @@
   </div>
 </div>
 
+<!-- ToS / AUP Mandatory Popup -->
+<div class="modal-overlay" id="tosModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tosTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="tosTitle" style="color: var(--danger);">⚠️ Legal Agreement Required</div>
+    </div>
+    <div class="tos-text">
+      <p style="margin-bottom: 0.75rem;">By accessing or using Scrappy, you agree to our strict <a href="/tos.html" style="color: var(--accent);">Terms of Service & Acceptable Use Policy (AUP)</a>.</p>
+      <p style="margin-bottom: 0.75rem;"><strong>You explicitly agree NOT to use this service for:</strong></p>
+      <ul style="margin-left: 1.5rem; margin-bottom: 1rem; color: var(--text);">
+        <li>Bypassing authentication walls (Logins)</li>
+        <li>Scraping Personally Identifiable Information (PII)</li>
+        <li>Executing Denial of Service (DDoS) attacks</li>
+      </ul>
+    </div>
+    <div class="modal-actions" style="justify-content: flex-end;">
+      <button class="btn btn-outline" type="button" id="tosDecline">I Decline</button>
+      <button class="btn btn-primary" type="button" id="tosAccept">I Accept & Agree</button>
+    </div>
+  </div>
+</div>
+
 <!-- Footer -->
 <footer>
   <p>© 2026 Scrappy · Built on <a href="https://github.com/CloakHQ/CloakBrowser" style="color:var(--accent);text-decoration:none;">CloakBrowser</a> + <a href="https://v2.hysteria.network" style="color:var(--accent);text-decoration:none;">Hysteria2</a> · MIT Licensed engines</p>
+  <p style="margin-top: 0.5rem;"><a href="/tos.html" style="color:var(--muted);text-decoration:underline;">Terms of Service & Acceptable Use Policy</a></p>
 </footer>
 
 <script>
