@@ -2,15 +2,15 @@
 # Runs on the SAME machine as FastAPI
 # Creates a local SOCKS5 proxy on :1080 that CloakBrowser uses
 
-server: us1.scrappy.io:443   # your Hysteria2 server node
+server: 168.144.113.171:443   # your Hysteria2 server node
 
 # Auth credentials (match what your server expects)
 auth: scrappy-internal-client-secret
 
 # TLS — verify your server cert
 tls:
-  sni: us1.scrappy.io
-  insecure: false             # set true only for testing
+  sni: 168.144.113.171
+  insecure: true              # set false once you use a valid domain cert
 
 # Bandwidth hints — adjust to your VPS uplink
 bandwidth:
