@@ -1,5 +1,3 @@
-version: "3.9"
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Scrappy — Docker Compose
 # Services: FastAPI + Redis + Hysteria2 client + Nginx
@@ -46,7 +44,9 @@ services:
 
   # ── Hysteria2 Client (SOCKS5 proxy for CloakBrowser) ────────────────────────
   hysteria-client:
-    image: ghcr.io/apernet/hysteria:latest
+    build:
+      context: https://github.com/apernet/hysteria.git
+      dockerfile: Dockerfile
     container_name: scrappy-hysteria-client
     restart: unless-stopped
     volumes:
@@ -55,7 +55,7 @@ services:
       - "1080:1080"
     networks:
       - scrappy-net
-    command: ["hysteria", "-c", "/etc/hysteria/config.yaml", "client"]
+    command: ["-c", "/etc/hysteria/config.yaml", "client"]
 
   # ── Nginx (TLS termination + rate limiting) ───────────────────────────────
   nginx:
