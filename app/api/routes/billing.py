@@ -53,23 +53,32 @@ async def billing_webhook(request: Request):
         raise HTTPException(status_code=400, detail=f"Failed to parse payload: {str(exc)}")
     
     email = payload.get("email")
-    permalink = payload.get("permalink")
+    # Gumroad occasionally uses product_permalink or includes the username in the string
+    permalink = payload.get("permalink") or payload.get("product_permalink") or ""
     seller_id = payload.get("seller_id")
     license_key = payload.get("license_key")
     
+    print(f"\n[WEBHOOK] Received Ping | Email: {email} | Permalink: {permalink}")
+
     # Security check: verify the ping actually came from your Gumroad account
     if GUMROAD_SELLER_ID and seller_id != GUMROAD_SELLER_ID:
+        print("[WEBHOOK] Rejected: Invalid seller_id")
         raise HTTPException(status_code=403, detail="Invalid seller_id")
     
     if not email or not permalink:
+        print("[WEBHOOK] Ignored: Missing email or permalink")
         return JSONResponse({"received": True, "status": "ignored - missing data"})
 
     # Match the Gumroad product permalink back to our plans
     plan = None
     for p, link in GUMROAD_PRODUCT_PERMALINKS.items():
-        if link == permalink:
+        if link and link in permalink: # Substring match handles "username/permalink" quirks
             plan = p
             break
+            
+    if not plan:
+        print(f"[WEBHOOK] Ignored: Permalink '{permalink}' does not match any known plans.")
+        return JSONResponse({"received": True, "status": "ignored - unknown permalink"})
             
     if email and plan in PLANS and plan != "free":
         email = normalize_email(email)
@@ -78,6 +87,8 @@ async def billing_webhook(request: Request):
         # Gumroad doesn't use standard customer IDs, so we use purchaser_id or sale_id
         customer_id = payload.get("purchaser_id", "")
         await set_user_plan(redis, email, plan, customer_id)
+        
+        print(f"[WEBHOOK] Success! Upgrading user {email} to {plan} plan.")
         
         keys = await redis.smembers(f"keys:email:{email}")
         if not keys:
