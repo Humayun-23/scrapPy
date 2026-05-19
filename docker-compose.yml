@@ -27,7 +27,6 @@ services:
       - HYSTERIA_ASIA_HOST=${HYSTERIA_ASIA_HOST}
     depends_on:
       - redis
-      - hysteria-client
     networks:
       - scrappy-net
     # Shared memory for Chromium
@@ -43,19 +42,6 @@ services:
     command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     networks:
       - scrappy-net
-
-  # ── Hysteria2 Client (QUIC tunnel → your server nodes) ───────────────────
-  hysteria-client:
-    image: tobyxdd/hysteria:latest
-    container_name: scrappy-hysteria-client
-    restart: unless-stopped
-    volumes:
-      - ./hysteria/hysteria-client.yaml:/etc/hysteria/client.yaml:ro
-    command: client -c /etc/hysteria/client.yaml
-    networks:
-      - scrappy-net
-    cap_add:
-      - NET_ADMIN
 
   # ── Nginx (TLS termination + rate limiting) ───────────────────────────────
   nginx:
