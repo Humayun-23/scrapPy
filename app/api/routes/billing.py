@@ -77,11 +77,13 @@ async def billing_webhook(request: Request):
             # Direct purchase: use the Gumroad license key as their API key
             await create_api_key(redis, email, plan, provided_key=license_key)
         else:
+            # Safely decode bytes to strings to prevent malformed Redis keys
+            keys_str = {k.decode("utf-8") if isinstance(k, bytes) else k for k in keys}
             # Upgrade their existing 'sk_' keys
-            for api_key in keys:
+            for api_key in keys_str:
                 await redis.hset(f"apikey:{api_key}", mapping={"plan": plan})
             # Also register the Gumroad license key so both work seamlessly
-            if license_key and license_key not in keys:
+            if license_key and license_key not in keys_str:
                 await create_api_key(redis, email, plan, provided_key=license_key)
 
     return JSONResponse({"received": True})
