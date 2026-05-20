@@ -6,10 +6,10 @@ from ...core.keys import create_api_key, set_user_plan
 from ...core.redis import get_redis
 from ...core.settings import (
     PLANS,
-    GUMROAD_PRODUCT_PERMALINKS,
-    get_gumroad_url,
+    DODOPAYMENTS_PRODUCT_IDS,
+    get_dodopayments_url,
     normalize_email,
-    GUMROAD_SELLER_ID,
+    DODOPAYMENTS_SELLER_ID,
 )
 
 router = APIRouter(prefix="/v1/billing")
@@ -35,8 +35,8 @@ async def billing_checkout(req: CheckoutRequest):
 
     email = key_data.get("email")
 
-    checkout_url = get_gumroad_url(plan, email)
-    return {"checkout_url": checkout_url, "session_id": "gumroad"}
+    checkout_url = get_dodopayments_url(plan, email)
+    return {"checkout_url": checkout_url, "session_id": "dodopayments"}
 
 
 @router.post("/webhook")
@@ -52,47 +52,49 @@ async def billing_webhook(request: Request):
     except Exception as exc:
         raise HTTPException(status_code=400, detail=f"Failed to parse payload: {str(exc)}")
     
-    email = payload.get("email")
-    # Gumroad occasionally uses product_permalink or includes the username in the string
-    permalink = payload.get("permalink") or payload.get("product_permalink") or ""
-    seller_id = payload.get("seller_id")
-    license_key = payload.get("license_key")
-    
-    print(f"\n[WEBHOOK] Received Ping | Email: {email} | Permalink: {permalink}")
+    data = payload.get("data") if isinstance(payload, dict) else None
+    source = data if isinstance(data, dict) else payload
 
-    # Security check: verify the ping actually came from your Gumroad account
-    if GUMROAD_SELLER_ID and seller_id != GUMROAD_SELLER_ID:
+    email = source.get("email") or source.get("customer_email")
+    product_id = source.get("product_id") or source.get("product") or ""
+    seller_id = source.get("seller_id") or payload.get("seller_id")
+    license_key = source.get("license_key")
+    
+    print(f"\n[WEBHOOK] Received Ping | Email: {email} | Product ID: {product_id}")
+
+    # Security check: verify the ping actually came from your DodoPayments account
+    if DODOPAYMENTS_SELLER_ID and seller_id != DODOPAYMENTS_SELLER_ID:
         print("[WEBHOOK] Rejected: Invalid seller_id")
         raise HTTPException(status_code=403, detail="Invalid seller_id")
     
-    if not email or not permalink:
-        print("[WEBHOOK] Ignored: Missing email or permalink")
+    if not email or not product_id:
+        print("[WEBHOOK] Ignored: Missing email or product_id")
         return JSONResponse({"received": True, "status": "ignored - missing data"})
 
-    # Match the Gumroad product permalink back to our plans
+    # Match the DodoPayments product ID back to our plans
     plan = None
-    for p, link in GUMROAD_PRODUCT_PERMALINKS.items():
-        if link and link in permalink: # Substring match handles "username/permalink" quirks
+    for p, pid in DODOPAYMENTS_PRODUCT_IDS.items():
+        if pid and pid in product_id:
             plan = p
             break
             
     if not plan:
-        print(f"[WEBHOOK] Ignored: Permalink '{permalink}' does not match any known plans.")
-        return JSONResponse({"received": True, "status": "ignored - unknown permalink"})
+        print(f"[WEBHOOK] Ignored: Product ID '{product_id}' does not match any known plans.")
+        return JSONResponse({"received": True, "status": "ignored - unknown product"})
             
     if email and plan in PLANS and plan != "free":
         email = normalize_email(email)
         redis = await get_redis()
         
-        # Gumroad doesn't use standard customer IDs, so we use purchaser_id or sale_id
-        customer_id = payload.get("purchaser_id", "")
+        # DodoPayments doesn't use standard customer IDs, so we use a fallback ID when present
+        customer_id = source.get("customer_id") or source.get("subscription_id") or ""
         await set_user_plan(redis, email, plan, customer_id)
         
         print(f"[WEBHOOK] Success! Upgrading user {email} to {plan} plan.")
         
         keys = await redis.smembers(f"keys:email:{email}")
         if not keys:
-            # Direct purchase: use the Gumroad license key as their API key
+            # Direct purchase: use the DodoPayments license key as their API key
             await create_api_key(redis, email, plan, provided_key=license_key)
         else:
             # Safely decode bytes to strings to prevent malformed Redis keys
@@ -100,7 +102,7 @@ async def billing_webhook(request: Request):
             # Upgrade their existing 'sk_' keys
             for api_key in keys_str:
                 await redis.hset(f"apikey:{api_key}", mapping={"plan": plan})
-            # Also register the Gumroad license key so both work seamlessly
+            # Also register the DodoPayments license key so both work seamlessly
             if license_key and license_key not in keys_str:
                 await create_api_key(redis, email, plan, provided_key=license_key)
 

@@ -9,23 +9,25 @@ PLANS = {
     "enterprise": {"requests": 999_999, "price": 999},
 }
 
-# Map your plans to your Gumroad product permalinks
-GUMROAD_PRODUCT_PERMALINKS = {
-    "starter": os.getenv("GUMROAD_PERMALINK_STARTER", "xtrhwc"),
-    "growth": os.getenv("GUMROAD_PERMALINK_GROWTH", "jmjlku"),
-    "scale": os.getenv("GUMROAD_PERMALINK_SCALE", "ufivvq"),
-    "enterprise": os.getenv("GUMROAD_PERMALINK_ENTERPRISE", "enterprise"),
+# Map your plans to your DodoPayments product IDs
+DODOPAYMENTS_PRODUCT_IDS = {
+    "starter": os.getenv("DODOPAYMENTS_PRODUCT_STARTER", "pdt_0NfEsMpd3CzJlmLus7wXT"),
+    "growth": os.getenv("DODOPAYMENTS_PRODUCT_GROWTH", "pdt_0NfEsT6GnNMKqy2mzvm3j"),
+    "scale": os.getenv("DODOPAYMENTS_PRODUCT_SCALE", "pdt_0NfEsaRBZYRlOw6MhdUrR"),
+    "enterprise": os.getenv("DODOPAYMENTS_PRODUCT_ENTERPRISE", ""),
 }
 
-GUMROAD_SELLER_ID = os.getenv("GUMROAD_SELLER_ID")
+DODOPAYMENTS_SELLER_ID = os.getenv("DODOPAYMENTS_SELLER_ID")
+DODOPAYMENTS_CHECKOUT_BASE = os.getenv("DODOPAYMENTS_CHECKOUT_BASE", "https://checkout.dodopayments.com")
 
 
 def normalize_email(email: str) -> str:
     return email.strip().lower()
 
 
-def get_gumroad_url(plan: str, email: str) -> str:
-    permalink = GUMROAD_PRODUCT_PERMALINKS.get(plan)
-    if not permalink:
-        raise HTTPException(status_code=500, detail=f"Missing Gumroad permalink for plan: {plan}")
-    return f"https://roshid0.gumroad.com/l/{permalink}?email={email}"
+def get_dodopayments_url(plan: str, email: str) -> str:
+    product_id = DODOPAYMENTS_PRODUCT_IDS.get(plan)
+    if not product_id:
+        raise HTTPException(status_code=500, detail=f"Missing DodoPayments product ID for plan: {plan}")
+    separator = "&" if "?" in DODOPAYMENTS_CHECKOUT_BASE else "?"
+    return f"{DODOPAYMENTS_CHECKOUT_BASE}{separator}product_id={product_id}&email={email}"
