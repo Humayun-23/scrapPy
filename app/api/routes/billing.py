@@ -1,3 +1,4 @@
+import urllib.parse
 from fastapi import APIRouter, HTTPException, Request, Form
 from fastapi.responses import JSONResponse
 
@@ -35,7 +36,18 @@ async def billing_checkout(req: CheckoutRequest):
 
     email = key_data.get("email")
 
-    checkout_url = get_dodopayments_url(plan, email, redirect_url=req.success_url)
+    product_id = DODOPAYMENTS_PRODUCT_IDS.get(plan)
+    if not product_id:
+        raise HTTPException(status_code=400, detail="Invalid plan product ID")
+
+    # Generate the DodoPayments static checkout link directly
+    params = {"quantity": "1"}
+    if email:
+        params["email"] = email
+    if getattr(req, "success_url", None):
+        params["return_url"] = req.success_url
+        
+    checkout_url = f"https://checkout.dodopayments.com/buy/{product_id}?{urllib.parse.urlencode(params)}"
     return {"checkout_url": checkout_url, "session_id": "dodopayments"}
 
 
