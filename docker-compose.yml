@@ -107,7 +107,7 @@ services:
     networks:
       - scrappy-net
     shm_size: "2gb"
-    command: ["sh", "-c", "rq worker --url $$REDIS_URL scrappy"]
+    command: ["rq", "worker", "--url", "redis://:${REDIS_PASSWORD}@redis:6379/0", "scrappy"]
 
   # ── Nginx (TLS termination + rate limiting) ───────────────────────────────
   nginx:
