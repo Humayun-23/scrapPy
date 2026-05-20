@@ -56,7 +56,7 @@ async def create_key(req: KeyCreateRequest, request: Request, background_tasks: 
     redis = await get_redis()
     
     # 1. IP-based Rate Limiting (max 3 per day per IP)
-    client_ip = request.headers.get("X-Forwarded-For") or (request.client.host if request.client else "unknown")
+    client_ip = request.headers.get("X-Real-IP") or request.headers.get("X-Forwarded-For") or (request.client.host if request.client else "unknown")
     client_ip = client_ip.split(",")[0].strip()
     rate_limit_key = f"rate_limit:keys:create:{client_ip}"
     

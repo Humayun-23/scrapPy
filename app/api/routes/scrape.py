@@ -1,4 +1,8 @@
 import time
+import traceback
+import socket
+import ipaddress
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -9,9 +13,27 @@ from ...scraper import scrape_url, render_url, batch_scrape, browser_url
 
 router = APIRouter(prefix="/v1")
 
+def validate_url(url: str):
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ["http", "https"]:
+            raise ValueError("Only HTTP/HTTPS schemes are allowed.")
+        
+        ip = socket.gethostbyname(parsed.hostname)
+        if ipaddress.ip_address(ip).is_private or ipaddress.ip_address(ip).is_loopback:
+            raise ValueError("Access to private network addresses is forbidden.")
+    except socket.gaierror:
+        raise ValueError("Could not resolve hostname.")
+    except Exception as e:
+        raise ValueError(f"Invalid URL: {e}")
+
 
 @router.post("/scrape")
 async def scrape(req: ScrapeRequest, auth: dict = Depends(verify_api_key)):
+    try:
+        validate_url(req.url)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     try:
         start = time.time()
         result = await scrape_url(
@@ -32,11 +54,16 @@ async def scrape(req: ScrapeRequest, auth: dict = Depends(verify_api_key)):
             **result,
         }
     except Exception as exc:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.post("/render")
 async def render(req: ScrapeRequest, auth: dict = Depends(verify_api_key)):
+    try:
+        validate_url(req.url)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     try:
         start = time.time()
         html = await render_url(req.url, wait_for=req.wait_for, timeout=req.timeout)
@@ -50,11 +77,16 @@ async def render(req: ScrapeRequest, auth: dict = Depends(verify_api_key)):
             "requests_remaining": auth["limit"] - auth["usage"],
         }
     except Exception as exc:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.post("/render/async")
 async def render_async(req: ScrapeRequest, auth: dict = Depends(verify_api_key)):
+    try:
+        validate_url(req.url)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     job = enqueue_job("render", req.model_dump())
     return {
         "success": True,
@@ -69,6 +101,11 @@ async def render_async(req: ScrapeRequest, auth: dict = Depends(verify_api_key))
 
 @router.post("/batch")
 async def batch(req: BatchRequest, auth: dict = Depends(verify_api_key)):
+    try:
+        for url in req.urls:
+            validate_url(url)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     if len(req.urls) > 10:
         raise HTTPException(status_code=400, detail="Max 10 URLs per batch request")
     try:
@@ -81,11 +118,16 @@ async def batch(req: BatchRequest, auth: dict = Depends(verify_api_key)):
             "requests_remaining": auth["limit"] - auth["usage"],
         }
     except Exception as exc:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.post("/scrape/async")
 async def scrape_async(req: ScrapeRequest, auth: dict = Depends(verify_api_key)):
+    try:
+        validate_url(req.url)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     job = enqueue_job("scrape", req.model_dump())
     return {
         "success": True,
@@ -100,6 +142,10 @@ async def scrape_async(req: ScrapeRequest, auth: dict = Depends(verify_api_key))
 
 @router.post("/browser")
 async def browser(req: BrowserRequest, auth: dict = Depends(verify_api_key)):
+    try:
+        validate_url(req.url)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     try:
         start = time.time()
         result = await browser_url(
@@ -121,11 +167,16 @@ async def browser(req: BrowserRequest, auth: dict = Depends(verify_api_key)):
             **result,
         }
     except Exception as exc:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.post("/browser/async")
 async def browser_async(req: BrowserRequest, auth: dict = Depends(verify_api_key)):
+    try:
+        validate_url(req.url)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     payload = req.model_dump()
     payload["steps"] = [step.model_dump() for step in (req.steps or [])]
     job = enqueue_job("browser", payload)
