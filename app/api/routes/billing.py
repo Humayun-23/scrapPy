@@ -69,9 +69,17 @@ async def billing_webhook(request: Request):
     data = payload.get("data") if isinstance(payload, dict) else None
     source = data if isinstance(data, dict) else payload
 
+    # Dodo Payments nests email under 'customer' in recent API versions
     email = source.get("email") or source.get("customer_email")
+    if not email and isinstance(source.get("customer"), dict):
+        email = source.get("customer").get("email")
+
+    # Dodo Payments nests product_id under 'product_cart' for payments
     product_id = source.get("product_id") or source.get("product") or ""
-    seller_id = source.get("seller_id") or payload.get("seller_id")
+    if not product_id and isinstance(source.get("product_cart"), list) and len(source.get("product_cart")) > 0:
+        product_id = source.get("product_cart")[0].get("product_id") or ""
+
+    seller_id = source.get("seller_id") or payload.get("seller_id") or payload.get("business_id")
     license_key = source.get("license_key")
     
     print(f"\n[WEBHOOK] Received Ping | Email: {email} | Product ID: {product_id}")
