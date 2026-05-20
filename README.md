@@ -6,6 +6,49 @@ Scrappy is a powerful, self-hostable API designed to solve the hardest problems 
 
 ---
 
+## ⚡ Quick Start Examples
+
+Convert a protected page into clean Markdown instantly using your preferred language.
+
+**cURL**
+```bash
+curl -X POST https://your-domain.com/v1/scrape \
+  -H "x-api-key: sk_your_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com", "extract_markdown": true}'
+```
+
+**Node.js (Fetch)**
+```javascript
+const response = await fetch('https://your-domain.com/v1/scrape', {
+  method: 'POST',
+  headers: {
+    'x-api-key': 'sk_your_key_here',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    url: 'https://example.com',
+    extract_markdown: true
+  })
+});
+const data = await response.json();
+console.log(data.markdown);
+```
+
+**Python (Requests)**
+```python
+import requests
+
+response = requests.post(
+    "https://your-domain.com/v1/scrape",
+    headers={"x-api-key": "sk_your_key_here"},
+    json={"url": "https://example.com", "extract_markdown": True}
+)
+print(response.json().get("markdown"))
+```
+
+---
+
 ## 🚀 Why Scrappy?
 
 Modern websites are heavily protected by WAFs (Cloudflare, Datadome) and rely on complex JavaScript frameworks (React, Vue). Traditional HTTP scrapers fail instantly. 
@@ -157,4 +200,3 @@ scrappy/
 ├── Dockerfile           # For the main FastAPI app
 └── requirements.txt
 ```
-

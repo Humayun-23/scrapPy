@@ -28,7 +28,11 @@ def validate_url(url: str):
         raise ValueError(f"Invalid URL: {e}")
 
 
-@router.post("/scrape")
+@router.post(
+    "/scrape",
+    summary="Scrape a URL (Synchronous)",
+    description="Stealthily scrapes a single URL and returns the extracted HTML, Markdown, or JSON data synchronously."
+)
 async def scrape(req: ScrapeRequest, auth: dict = Depends(verify_api_key)):
     try:
         validate_url(req.url)
@@ -58,7 +62,11 @@ async def scrape(req: ScrapeRequest, auth: dict = Depends(verify_api_key)):
         raise HTTPException(status_code=500, detail=str(exc))
 
 
-@router.post("/render")
+@router.post(
+    "/render",
+    summary="Render a URL (Synchronous)",
+    description="Loads a URL in a stealth browser, waits for JS execution, and returns the fully rendered raw HTML."
+)
 async def render(req: ScrapeRequest, auth: dict = Depends(verify_api_key)):
     try:
         validate_url(req.url)
@@ -81,7 +89,11 @@ async def render(req: ScrapeRequest, auth: dict = Depends(verify_api_key)):
         raise HTTPException(status_code=500, detail=str(exc))
 
 
-@router.post("/render/async")
+@router.post(
+    "/render/async",
+    summary="Render a URL (Asynchronous)",
+    description="Enqueues a background job to render a URL. Returns a job ID to poll for status."
+)
 async def render_async(req: ScrapeRequest, auth: dict = Depends(verify_api_key)):
     try:
         validate_url(req.url)
@@ -99,7 +111,11 @@ async def render_async(req: ScrapeRequest, auth: dict = Depends(verify_api_key))
     }
 
 
-@router.post("/batch")
+@router.post(
+    "/batch",
+    summary="Batch Scrape URLs",
+    description="Concurrently scrapes up to 10 URLs in a single synchronous request."
+)
 async def batch(req: BatchRequest, auth: dict = Depends(verify_api_key)):
     try:
         for url in req.urls:
@@ -122,7 +138,11 @@ async def batch(req: BatchRequest, auth: dict = Depends(verify_api_key)):
         raise HTTPException(status_code=500, detail=str(exc))
 
 
-@router.post("/scrape/async")
+@router.post(
+    "/scrape/async",
+    summary="Scrape a URL (Asynchronous)",
+    description="Enqueues a background job to scrape a URL. Returns a job ID to poll for status and results."
+)
 async def scrape_async(req: ScrapeRequest, auth: dict = Depends(verify_api_key)):
     try:
         validate_url(req.url)
@@ -140,7 +160,11 @@ async def scrape_async(req: ScrapeRequest, auth: dict = Depends(verify_api_key))
     }
 
 
-@router.post("/browser")
+@router.post(
+    "/browser",
+    summary="Automate Browser Interactions",
+    description="Navigate to a URL and perform a sequence of browser actions (click, type, scroll, wait) before extracting data."
+)
 async def browser(req: BrowserRequest, auth: dict = Depends(verify_api_key)):
     try:
         validate_url(req.url)
@@ -171,7 +195,11 @@ async def browser(req: BrowserRequest, auth: dict = Depends(verify_api_key)):
         raise HTTPException(status_code=500, detail=str(exc))
 
 
-@router.post("/browser/async")
+@router.post(
+    "/browser/async",
+    summary="Automate Browser Interactions (Asynchronous)",
+    description="Enqueues a background job to automate browser interactions. Returns a job ID."
+)
 async def browser_async(req: BrowserRequest, auth: dict = Depends(verify_api_key)):
     try:
         validate_url(req.url)

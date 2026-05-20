@@ -49,7 +49,11 @@ def send_api_key_email(email_address: str, api_key: str):
         print(f"Failed to send email to {email_address}: {e}")
 
 
-@router.post("/keys/create")
+@router.post(
+    "/keys/create",
+    summary="Create a new API Key",
+    description="Generates a new API key for the specified plan and emails it to the user. Limited to 3 per IP per day."
+)
 async def create_key(req: KeyCreateRequest, request: Request, background_tasks: BackgroundTasks):
     if req.plan not in PLANS:
         raise HTTPException(status_code=400, detail=f"Invalid plan. Choose: {list(PLANS.keys())}")
@@ -87,7 +91,11 @@ async def create_key(req: KeyCreateRequest, request: Request, background_tasks: 
     }
 
 
-@router.get("/keys/usage")
+@router.get(
+    "/keys/usage",
+    summary="Check API Key Usage",
+    description="Returns the current month's usage, limits, and reset date for the provided API key."
+)
 async def key_usage(auth: dict = Depends(verify_api_key)):
     return {
         "plan": auth["plan"],
@@ -100,7 +108,11 @@ async def key_usage(auth: dict = Depends(verify_api_key)):
     }
 
 
-@router.get("/plans")
+@router.get(
+    "/plans",
+    summary="List Subscription Plans",
+    description="Returns a list of all available subscription plans and their details."
+)
 async def list_plans():
     return {
         "plans": [
@@ -117,7 +129,11 @@ async def list_plans():
     }
 
 
-@router.get("/admin/stats")
+@router.get(
+    "/admin/stats",
+    summary="Get Admin Statistics",
+    description="Returns aggregate usage statistics for all API keys. Requires the ADMIN_SECRET header."
+)
 async def get_admin_stats(request: Request):
     """Returns aggregate usage statistics for all API keys."""
     admin_secret = os.getenv("ADMIN_SECRET")

@@ -7,7 +7,11 @@ from ...jobs import fetch_job
 router = APIRouter(prefix="/v1/jobs")
 
 
-@router.get("/{job_id}")
+@router.get(
+    "/{job_id}",
+    summary="Get Job Status",
+    description="Retrieve the status and optional result of a previously enqueued asynchronous job."
+)
 async def job_status(job_id: str, auth: dict = Depends(verify_api_key)):
     try:
         job = fetch_job(job_id)
@@ -20,7 +24,11 @@ async def job_status(job_id: str, auth: dict = Depends(verify_api_key)):
     return response
 
 
-@router.post("/{job_id}/cancel")
+@router.post(
+    "/{job_id}/cancel",
+    summary="Cancel a Job",
+    description="Attempt to cancel a pending or currently running asynchronous job."
+)
 async def job_cancel(job_id: str, auth: dict = Depends(verify_api_key)):
     try:
         job = fetch_job(job_id)
