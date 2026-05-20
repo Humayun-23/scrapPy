@@ -14,8 +14,6 @@ services:
     restart: unless-stopped
     env_file:
       - .env
-    ports:
-      - "8000:8000"
     environment:
       - REDIS_URL=redis://redis:6379
       - HYSTERIA_PROXY=socks5://hysteria-client:1080
