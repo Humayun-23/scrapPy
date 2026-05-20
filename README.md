@@ -1,21 +1,26 @@
 # Scrappy 🕵️‍♂️
 
 **The Stealth Web Scraping & Browser Automation API for AI and Data Teams.**
+**Indian Job Market Data API — Best Pick.**
 
 Scrappy is a powerful, self-hostable API designed to solve the hardest problems in web data extraction. Whether you are building AI agents, RAG pipelines, or market intelligence tools, Scrappy bypasses advanced anti-bot protections to deliver clean, structured data from any website.
+Naukri, LinkedIn, Indeed, and Internshala aggressively wall off their data. HR teams, recruiters, and salary benchmarking tools desperately need this data but can't get it cleanly. Scrappy is a DaaS API that bypasses their WAFs and returns perfectly structured job listings, salary ranges, and required skills by role, city, and experience level.
 
 ---
 
 ## ⚡ Quick Start Examples
 
 Convert a protected page into clean Markdown instantly using your preferred language.
+Get structured job listings with parsed salaries instantly.
 
 **cURL**
 ```bash
 curl -X POST https://your-domain.com/v1/scrape \
+curl -X POST https://your-domain.com/v1/jobs/search \
   -H "x-api-key: sk_your_key_here" \
   -H "Content-Type: application/json" \
   -d '{"url": "https://example.com", "extract_markdown": true}'
+  -d '{"query": "python developer", "location": "bangalore", "source": "naukri"}'
 ```
 
 **Node.js (Fetch)**

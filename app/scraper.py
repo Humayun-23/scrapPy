@@ -3,12 +3,7 @@ scraper.py — CloakBrowser + Hysteria2 stealth scraping engine
 """
 import os
 import asyncio
-import base64
 import itertools
-try:
-    import markdownify
-except ImportError:
-    markdownify = None
 from typing import Optional
 
 from cloakbrowser import launch_async, launch_context
@@ -40,226 +35,125 @@ def _get_semaphore() -> asyncio.Semaphore:
     return _semaphores[loop]
 
 
-async def _extract_page_data(
-    page, extract_json: bool, screenshot: bool, extract_markdown: bool = False
-) -> dict:
-    """Helper to extract common data, reducing duplicate code and IPC overhead."""
-    html_content = await page.content()
-    result = {
-        "html": html_content,
-        "title": await page.title(),
-        "url": page.url,
-    }
+async def extract_jobs_from_page(page, site: str) -> list[dict]:
+    """
+    Injects JS to parse the DOM into structured Job objects.
+    Note: Selectors must be monitored and updated periodically as sites change them.
+    """
+    if site == "linkedin":
+        pass
 
-    if extract_markdown:
-        if markdownify:
-            # Clean markdown conversion optimized for LLM inputs
-            result["markdown"] = markdownify.markdownify(html_content, heading_style="ATX").strip()
-        else:
-            result["markdown"] = "Error: markdownify package is not installed."
+    elif site == "indeed":
+        pass
 
-    if extract_json:
-        # Combine JS evaluation to reduce round-trips to the browser context
-        extracted = await page.evaluate("""() => {
-            const scripts = document.querySelectorAll('script[type="application/ld+json"]');
-            const json_data = Array.from(scripts).map(s => {
-                try { return JSON.parse(s.textContent); } catch(e) { return null; }
-            }).filter(Boolean);
-
-            const metas = document.querySelectorAll('meta');
-            const meta = {};
-            metas.forEach(m => {
-                const name = m.getAttribute('name') || m.getAttribute('property');
-                const content = m.getAttribute('content');
-                if (name && content) meta[name] = content;
-            });
-            return { json_data, meta };
+    elif site == "naukri":
+        return await page.evaluate("""() => {
+            const jobCards = document.querySelectorAll('.srp-jobtuple-wrapper');
+            return Array.from(jobCards).map(card => {
+                let min_sal = null, max_sal = null;
+                const salText = card.querySelector('.sal')?.innerText || '';
+                if(salText.includes('-')) {
+                    const parts = salText.split('-');
+                    min_sal = parseInt(parts[0].replace(/[^0-9]/g, '')) * 100000 || null;
+                    max_sal = parseInt(parts[1].replace(/[^0-9]/g, '')) * 100000 || null;
+                }
+                return {
+                    title: (card.querySelector('.title')?.innerText || '').trim(),
+                    company: (card.querySelector('.comp-name')?.innerText || '').trim(),
+                    location: (card.querySelector('.locWdth')?.innerText || '').trim(),
+                    salary_min: min_sal,
+                    salary_max: max_sal,
+                    experience: (card.querySelector('.expwdth')?.innerText || null),
+                    skills: Array.from(card.querySelectorAll('.tags-gt .tag-li')).map(s => s.innerText.trim()),
+                    posted_at: (card.querySelector('.job-post-day')?.innerText || '').trim(),
+                    applicants: null,
+                    job_url: (card.querySelector('.title')?.href || '').trim(),
+                    source: "naukri"
+                };
+            }).filter(j => j.title);
         }""")
-        result["structured_data"] = extracted["json_data"]
-        result["meta"] = extracted["meta"]
 
-    if screenshot:
-        png_bytes = await page.screenshot(full_page=True)
-        result["screenshot_base64"] = base64.b64encode(png_bytes).decode()
+    elif site == "internshala":
+        return await page.evaluate("""() => {
+            const jobCards = document.querySelectorAll('.individual_internship');
+            return Array.from(jobCards).map(card => {
+                let min_sal = null, max_sal = null;
+                const salText = card.querySelector('.stipend')?.innerText || '';
+                const salMatch = salText.match(/(\d+)/g);
+                if (salMatch && salMatch.length > 0) {
+                    min_sal = parseInt(salMatch[0]);
+                    max_sal = salMatch.length > 1 ? parseInt(salMatch[1]) : min_sal;
+                }
+                return {
+                    title: (card.querySelector('.profile')?.innerText || '').trim(),
+                    company: (card.querySelector('.company_name')?.innerText || '').trim(),
+                    location: (card.querySelector('.location_link')?.innerText || '').trim(),
+                    salary_min: min_sal,
+                    salary_max: max_sal,
+                    experience: "0-1 years",
+                    skills: [],
+                    posted_at: (card.querySelector('.status-success')?.innerText || '').trim(),
+                    applicants: null,
+                    job_url: (card.querySelector('.profile a')?.href || '').trim(),
+                    source: "internshala"
+                };
+            }).filter(j => j.title);
+        }""")
+    return []
 
-    return result
-
-async def scrape_url(
-    url: str,
-    wait_for: Optional[str] = None,
-    extract_json: bool = False,
-    screenshot: bool = False,
-    extract_markdown: bool = False,
-    timeout: int = 30,
-) -> dict:
-    """
-    Scrape a single URL using CloakBrowser routed through Hysteria2.
-    Returns cleaned HTML, optional screenshot, optional structured data.
-    """
-    async with _get_semaphore():
-        current_proxy = _get_proxy()
-        browser = await launch_async(
-            headless=True,
-            **({'proxy': current_proxy} if current_proxy else {})
-        )
-        try:
-            page = await browser.new_page()
-            await page.set_extra_http_headers({
-                "Accept-Language": "en-US,en;q=0.9",
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-            })
-
-            await page.goto(url, timeout=timeout * 1000, wait_until="domcontentloaded")
-
-            # Wait for specific element if requested
-            if wait_for:
-                try:
-                    await page.wait_for_selector(wait_for, timeout=timeout * 1000)
-                except Exception:
-                    pass  # Continue even if selector not found
-
-            return await _extract_page_data(page, extract_json, screenshot, extract_markdown)
-
-        finally:
-            await browser.close()
-
-
-async def _apply_steps(page, steps: list[dict], default_timeout: int) -> None:
-    for step in steps:
-        action = (step.get("action") or "").lower()
-        if action == "wait_for":
-            selector = step.get("selector")
-            if not selector:
-                raise ValueError("wait_for requires selector")
-            timeout_ms = step.get("timeout_ms") or (default_timeout * 1000)
-            await page.wait_for_selector(selector, timeout=timeout_ms)
-            continue
-
-        if action == "click":
-            selector = step.get("selector")
-            if not selector:
-                raise ValueError("click requires selector")
-            await page.click(selector)
-            continue
-
-        if action == "fill":
-            selector = step.get("selector")
-            value = step.get("value")
-            if not selector or value is None:
-                raise ValueError("fill requires selector and value")
-            await page.fill(selector, value)
-            continue
-
-        if action == "type":
-            selector = step.get("selector")
-            text = step.get("text")
-            if not selector or text is None:
-                raise ValueError("type requires selector and text")
-            delay_ms = step.get("delay_ms")
-            if delay_ms is None:
-                await page.type(selector, text)
-            else:
-                await page.type(selector, text, delay=delay_ms)
-            continue
-
-        if action == "scroll":
-            selector = step.get("selector")
-            if selector:
-                await page.eval_on_selector(
-                    selector,
-                    "el => el.scrollIntoView({behavior: 'auto', block: 'center'})",
-                )
-            else:
-                x = step.get("x") or 0
-                y = step.get("y") or 0
-                if x == 0 and y == 0:
-                    y = 500
-                await page.evaluate("([x, y]) => window.scrollBy(x, y)", [x, y])
-            continue
-
-        if action == "wait":
-            wait_ms = step.get("wait_ms")
-            if wait_ms is None:
-                raise ValueError("wait requires wait_ms")
-            await asyncio.sleep(wait_ms / 1000)
-            continue
-
-        raise ValueError(f"Unknown action: {action}")
-
-
-async def browser_url(
-    url: str,
-    steps: Optional[list[dict]] = None,
-    wait_for: Optional[str] = None,
-    extract_json: bool = False,
-    screenshot: bool = False,
-    extract_markdown: bool = False,
-    timeout: int = 30,
-) -> dict:
-    """
-    Browse a URL, run optional interaction steps, and return HTML and metadata.
-    """
-    async with _get_semaphore():
-        current_proxy = _get_proxy()
-        browser = await launch_async(
-            headless=True,
-            **({'proxy': current_proxy} if current_proxy else {})
-        )
-        try:
-            page = await browser.new_page()
-            await page.set_extra_http_headers({
-                "Accept-Language": "en-US,en;q=0.9",
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-            })
-
-            await page.goto(url, timeout=timeout * 1000, wait_until="domcontentloaded")
-
-            if wait_for:
-                try:
-                    await page.wait_for_selector(wait_for, timeout=timeout * 1000)
-                except Exception:
-                    pass
-
-            if steps:
-                await _apply_steps(page, steps, timeout)
-
-            return await _extract_page_data(page, extract_json, screenshot, extract_markdown)
-
-        finally:
-            await browser.close()
-
-
-async def render_url(
-    url: str,
-    wait_for: Optional[str] = None,
-    timeout: int = 30,
-) -> str:
-    """
-    Simple render — returns raw HTML string after full JS execution.
-    """
-    result = await scrape_url(url, wait_for=wait_for, timeout=timeout)
-    return result["html"]
-
-
-async def batch_scrape(
-    urls: list[str],
-    wait_for: Optional[str] = None,
-    timeout: int = 30,
+async def search_job_market(
+    query: str,
+    location: str,
+    experience_min: int,
+    experience_max: int,
+    source: str,
+    limit: int = 50,
+    timeout: int = 45,
 ) -> list[dict]:
-    """
-    Scrape multiple URLs concurrently.
-    Each runs independently with its own CloakBrowser instance.
-    """
-    tasks = [
-        scrape_url(url, wait_for=wait_for, timeout=timeout)
-        for url in urls
-    ]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-
-    output = []
-    for url, result in zip(urls, results):
-        if isinstance(result, Exception):
-            output.append({"url": url, "success": False, "error": str(result)})
+    """Constructs the appropriate URL for the targeted job board and extracts data."""
+    import urllib.parse
+    
+    # 1. URL Construction Logic
+    q = urllib.parse.quote(query.replace(" ", "-"))
+    
+    if location:
+        l = urllib.parse.quote(location.replace(" ", "-"))
+        if source == "naukri":
+            url = f"https://www.naukri.com/{q}-jobs-in-{l}?experience={experience_min}"
+        elif source == "internshala":
+            url = f"https://internshala.com/internships/{q}-internship-in-{l}/"
         else:
-            output.append({"url": url, "success": True, **result})
-    return output
+            url = f"https://example.com"
+    else:
+        if source == "naukri":
+            url = f"https://www.naukri.com/{q}-jobs?experience={experience_min}"
+        elif source == "internshala":
+            url = f"https://internshala.com/internships/{q}-internship/"
+        else:
+            url = f"https://example.com"
+
+    # 2. Stealth Browser Execution
+    async with _get_semaphore():
+        current_proxy = _get_proxy()
+        browser = await launch_async(
+            headless=True,
+            **({'proxy': current_proxy} if current_proxy else {})
+        )
+        try:
+            page = await browser.new_page()
+            await page.set_extra_http_headers({
+                "Accept-Language": "en-US,en;q=0.9",
+            })
+
+            # Some of these sites need longer timeouts and aggressive bot protections
+            await page.goto(url, timeout=timeout * 1000, wait_until="domcontentloaded")
+            await asyncio.sleep(3)  # Allow JS rendering (e.g. React frameworks on Naukri)
+            
+            if limit > 20:
+                for _ in range(3):
+                    await page.evaluate("window.scrollBy(0, 1000)")
+                    await asyncio.sleep(1)
+                    
+            return await extract_jobs_from_page(page, source)
+        finally:
+            await browser.close()
