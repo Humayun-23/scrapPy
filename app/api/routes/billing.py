@@ -1,3 +1,4 @@
+import os
 import urllib.parse
 from fastapi import APIRouter, HTTPException, Request, Form
 from fastapi.responses import JSONResponse
@@ -44,10 +45,11 @@ async def billing_checkout(req: CheckoutRequest):
     params = {"quantity": "1"}
     if email:
         params["email"] = email
-    if getattr(req, "success_url", None):
-        params["return_url"] = req.success_url
         
-    checkout_url = f"https://checkout.dodopayments.com/buy/{product_id}?{urllib.parse.urlencode(params)}"
+    # Dodo Payments requires 'test.checkout' for test products.
+    # 'return_url' is not supported in the static query string and causes validation errors.
+    domain = "test.checkout" if os.getenv("DODOPAYMENTS_TEST_MODE", "true").lower() == "true" else "checkout"
+    checkout_url = f"https://{domain}.dodopayments.com/buy/{product_id}?{urllib.parse.urlencode(params)}"
     return {"checkout_url": checkout_url, "session_id": "dodopayments"}
 
 
