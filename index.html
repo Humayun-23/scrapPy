@@ -15,7 +15,7 @@
 <meta name="twitter:description" content="Bypass WAFs and bot detection. Extract clean HTML, JSON, and Markdown from any website."/>
 <link rel="canonical" href="https://scrappie.tech/"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <!-- Plausible Analytics (Privacy-friendly, GDPR compliant tracking) -->
 <script defer data-domain="scrappie.tech" src="https://plausible.io/js/script.js"></script>
 <style>
@@ -56,7 +56,7 @@
   body {
     background: radial-gradient(circle at top center, var(--bg-center), var(--bg) 60%);
     color: var(--text);
-    font-family: 'Sora', sans-serif;
+    font-family: 'Inter', sans-serif;
     line-height: 1.6;
     overflow-x: hidden;
     font-synthesis: none;
@@ -229,11 +229,11 @@
   h1 {
     font-size: clamp(2.5rem, 6vw, 4.5rem);
     font-weight: 800;
-    line-height: 1;
+    line-height: 1.1;
     letter-spacing: -1.5px;
     margin-bottom: 1.5rem;
     animation: fadeDown .7s ease .1s both;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Poppins', sans-serif;
   }
 
   h1 em {
@@ -370,9 +370,9 @@
     font-size: clamp(2rem, 4vw, 3.5rem);
     font-weight: 800;
     letter-spacing: -1px;
-    line-height: 1.1;
+    line-height: 1.2;
     margin-bottom: 1rem;
-    font-family: 'Syne', sans-serif;
+    font-family: 'Poppins', sans-serif;
   }
 
   h2 em { font-style: normal; color: var(--accent); }
@@ -655,26 +655,38 @@
   }
 
   /* ── Test results table ── */
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-top: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
   .test-table {
     width: 100%;
     border-collapse: collapse;
     font-family: 'Space Mono', monospace;
     font-size: .8rem;
-    margin-top: 2rem;
+    min-width: 600px;
   }
 
   .test-table th {
     text-align: left;
-    padding: .75rem 1rem;
+    padding: 1rem 1.25rem;
     color: var(--muted);
     font-size: .7rem;
     letter-spacing: 1px;
     text-transform: uppercase;
     border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.02);
   }
 
   .test-table td {
-    padding: .75rem 1rem;
+    padding: 1rem 1.25rem;
     border-bottom: 1px solid rgba(30,36,48,.6);
   }
 
@@ -818,11 +830,27 @@
   }
 
   /* ── Responsive ── */
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     nav { padding: 1rem 1.25rem; }
     .nav-links { display: none; }
-    .stats-bar { gap: 2rem; }
-    h1 { letter-spacing: -2px; }
+    
+    .hero { padding: 6rem 1rem 4rem; }
+    h1 { font-size: 2.75rem; letter-spacing: -1px; line-height: 1.2; }
+    .hero-sub { font-size: 1rem; padding: 0 0.5rem; }
+    .hero-actions { flex-direction: column; width: 100%; padding: 0 1rem; gap: 1rem; }
+    .hero-actions .btn { width: 100%; justify-content: center; }
+    
+    .code-block { margin: 2rem 1rem 0; padding: 1.25rem; width: auto; }
+    .code-block pre { font-size: 0.75rem; }
+    
+    .stats-bar { gap: 2rem; flex-direction: column; align-items: center; padding: 2rem 1rem; }
+    
+    section { padding: 4rem 1rem; }
+    h2 { font-size: 2.25rem; }
+    
+    .features-grid, .product-grid, .pricing-grid, .value-grid, .auth-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 </head>
@@ -1002,13 +1030,60 @@
   </div>
 </section>
 
+<!-- Competitors vs Scrappie -->
+<section id="comparison">
+  <p class="section-label">// The Scrappie Edge</p>
+  <h2>Competitors vs <em>Scrappie</em></h2>
+  <p class="section-desc">Why developers switch to Scrappie and never look back. We focus on true stealth without hidden fees.</p>
+  
+  <div class="table-responsive">
+    <table class="test-table">
+      <thead>
+        <tr>
+          <th>Feature / Metric</th>
+          <th>Legacy Scrapers (ZenRows, ScrapingBee, etc.)</th>
+          <th>Scrappie</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Network Protocol</td>
+          <td class="fail">Standard HTTP/2 (Easily Fingerprinted)</td>
+          <td class="pass">Hysteria2 QUIC / HTTP/3</td>
+        </tr>
+        <tr>
+          <td>Browser Stealth</td>
+          <td class="fail">JS Injections (Puppeteer Stealth)</td>
+          <td class="pass">CloakBrowser (C++ Source-Level Patches)</td>
+        </tr>
+        <tr>
+          <td>Turnstile &amp; Datadome</td>
+          <td class="fail">Hit or Miss / Constant Retries</td>
+          <td class="pass">100% Pass Rate</td>
+        </tr>
+        <tr>
+          <td>Pricing (per 10k requests)</td>
+          <td class="fail">$40 - $70+ (with heavy JS multipliers)</td>
+          <td class="pass">$29 (Starter Plan, JS Included)</td>
+        </tr>
+        <tr>
+          <td>Integration</td>
+          <td class="fail">Complex scripts to maintain</td>
+          <td class="pass">Simple JSON Action Arrays</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
 <!-- Test Results -->
 <section id="tests" style="background: var(--surface); max-width: 100%; padding: 6rem 2rem; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
   <div style="max-width: 1100px; margin: 0 auto;">
     <p class="section-label">// Live Test Results</p>
     <h2>Tested against <em>every</em><br/>major detection service.</h2>
     <p class="section-desc">Verified against live production systems. Last tested Feb 2026 on Chromium 142.</p>
-    <table class="test-table">
+    <div class="table-responsive">
+      <table class="test-table">
       <thead>
         <tr>
           <th>Detection Service</th>
@@ -1029,7 +1104,8 @@
         <tr><td>CDP detection</td><td class="fail">Detected</td><td class="pass">Not detected</td><td style="color:var(--muted)">isAutomatedWithCDP: false</td></tr>
         <tr><td>UA string leak</td><td class="fail">HeadlessChrome</td><td class="pass">Chrome/142.0.0.0</td><td style="color:var(--muted)">No headless signal</td></tr>
       </tbody>
-    </table>
+      </table>
+    </div>
   </div>
 </section>
 
