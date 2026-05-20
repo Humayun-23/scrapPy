@@ -115,3 +115,43 @@ async def list_plans():
             for name, data in PLANS.items()
         ]
     }
+
+
+@router.get("/admin/stats")
+async def get_admin_stats(request: Request):
+    """Returns aggregate usage statistics for all API keys."""
+    admin_secret = os.getenv("ADMIN_SECRET")
+    if not admin_secret or request.headers.get("x-admin-secret") != admin_secret:
+        raise HTTPException(
+            status_code=403, 
+            detail="Forbidden. Set ADMIN_SECRET env var and pass x-admin-secret header."
+        )
+
+    redis = await get_redis()
+    free_keys, paid_keys, total_requests = 0, 0, 0
+
+    # Scan through all API keys in Redis
+    async for key in redis.scan_iter("apikey:*"):
+        raw_data = await redis.hgetall(key)
+        if not raw_data:
+            continue
+            
+        # Safely decode from bytes to strings
+        key_data = {
+            (k.decode("utf-8") if isinstance(k, bytes) else k):
+            (v.decode("utf-8") if isinstance(v, bytes) else v)
+            for k, v in raw_data.items()
+        }
+        
+        if key_data.get("plan", "free") == "free":
+            free_keys += 1
+        else:
+            paid_keys += 1
+            
+        total_requests += int(key_data.get("usage") or 0)
+
+    return {
+        "free_users": free_keys,
+        "upgraded_users": paid_keys,
+        "total_api_requests": total_requests
+    }

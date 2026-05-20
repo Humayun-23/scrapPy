@@ -19,6 +19,7 @@ services:
       - HYSTERIA_PROXY=socks5://hysteria-client:1080
       - MAX_CONCURRENT_BROWSERS=5
       - PROXY_SECRET=${PROXY_SECRET}
+      - ADMIN_SECRET=${ADMIN_SECRET}
       # Optional: Add a comma-separated list of proxies for rotation
       - PROXY_POOL=${PROXY_POOL:-}
       # Hysteria2 node hostnames
