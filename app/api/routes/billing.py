@@ -35,7 +35,7 @@ async def billing_checkout(req: CheckoutRequest):
 
     email = key_data.get("email")
 
-    checkout_url = get_dodopayments_url(plan, email)
+    checkout_url = get_dodopayments_url(plan, email, redirect_url=req.success_url)
     return {"checkout_url": checkout_url, "session_id": "dodopayments"}
 
 

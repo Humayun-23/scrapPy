@@ -1,4 +1,6 @@
 import os
+from urllib.parse import urlencode
+
 from fastapi import HTTPException
 
 PLANS = {
@@ -18,16 +20,21 @@ DODOPAYMENTS_PRODUCT_IDS = {
 }
 
 DODOPAYMENTS_SELLER_ID = os.getenv("DODOPAYMENTS_SELLER_ID")
-DODOPAYMENTS_CHECKOUT_BASE = os.getenv("DODOPAYMENTS_CHECKOUT_BASE", "https://checkout.dodopayments.com")
+DODOPAYMENTS_CHECKOUT_BASE = os.getenv("DODOPAYMENTS_CHECKOUT_BASE", "https://checkout.dodopayments.com/buy")
+DODOPAYMENTS_RETURN_URL = os.getenv("DODOPAYMENTS_RETURN_URL")
 
 
 def normalize_email(email: str) -> str:
     return email.strip().lower()
 
 
-def get_dodopayments_url(plan: str, email: str) -> str:
+def get_dodopayments_url(plan: str, email: str, redirect_url: str | None = None) -> str:
     product_id = DODOPAYMENTS_PRODUCT_IDS.get(plan)
     if not product_id:
         raise HTTPException(status_code=500, detail=f"Missing DodoPayments product ID for plan: {plan}")
-    separator = "&" if "?" in DODOPAYMENTS_CHECKOUT_BASE else "?"
-    return f"{DODOPAYMENTS_CHECKOUT_BASE}{separator}product_id={product_id}&email={email}"
+    redirect_url = redirect_url or DODOPAYMENTS_RETURN_URL
+    if not redirect_url:
+        raise HTTPException(status_code=500, detail="Missing DodoPayments redirect_url")
+    base = DODOPAYMENTS_CHECKOUT_BASE.rstrip("/")
+    query = urlencode({"quantity": 1, "redirect_url": redirect_url, "email": email})
+    return f"{base}/{product_id}?{query}"
